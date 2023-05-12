@@ -1,0 +1,5 @@
+v"(m,l,r)
+v - verb
+m - monadic rank
+l - dyadic left rank
+r - dyadic right rank

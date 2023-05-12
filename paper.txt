@@ -1,0 +1,14 @@
+title: 
+
+StellerJ: A compiled approach to the functional array language paradigm
+
+proposal:
+no less than 2 pages including references
+
+name meaning:
+Named for Georg Wilhelm Steller, for whom Steller's jay (Cyanocitta stelleri) is named
+https://en.wikipedia.org/wiki/Steller%27s_jay
+https://en.wikipedia.org/wiki/Georg_Wilhelm_Steller
+
+related:
+https://llvm.org/pubs/2004-01-30-CGO-LLVM.html

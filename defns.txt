@@ -1,0 +1,23 @@
+op. + =: {} : {}
+conj. f@g =: {{ f g y }} : {{ f x g y }}
+conj. f&g =: {{ f g y }} : {{ (g x) f (g y) }}
+adj. f~  =: {{ y f y }} : {{ y f x }}
+adj. f/  =: {{
+ NB. currently expressed as x(u/v)y, u=seed, v=function
+ if. 0=#y do.
+  u
+ else.
+  'head rest' =. ({. ; }.) y
+  iter =. head
+  for_el. rest do.
+   iter =. iter v el
+  end.
+  iter
+ end.
+}} : {{
+ todo 'implement'
+}}
+
+NB. @: and &: similar, but with infinite ranks
+NB. how do i want to handle ranks?
+NB. https://en.wikipedia.org/wiki/Rank_(J_programming_language)
