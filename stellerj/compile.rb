@@ -58,14 +58,9 @@ class StellerJ::Compiler
         end
     end
     
-    def compile_verb(verb, params)
-        lhs, rhs = params
+    def handle_native_primitive(verb, lhs, rhs)
         lhs_raw, lhs_type = lhs
         rhs_raw, rhs_type = rhs
-        
-        puts "LHS: #{lhs.inspect}"
-        puts "RHS: #{rhs.inspect}"
-        
         types = [ lhs_type, rhs_type ].compact
         case types
         when StellerJ::LLVMEmitter::ITypePair
@@ -92,6 +87,20 @@ class StellerJ::Compiler
         end
         reg = @emitter.primitive prim_name, mono_type, [ lhs_raw, rhs_raw ]
         [ reg, mono_type ]
+    end
+    
+    def compile_verb(verb, params)
+        lhs, rhs = params
+        
+        puts "LHS: #{lhs.inspect}"
+        puts "RHS: #{rhs.inspect}"
+        
+        case verb
+        when "$"
+            raise "TODO: $"
+        when "+", "-", "*", "%"
+            handle_native_primitive verb, lhs, rhs
+        end
     end
     
     def store(name, value, dtype, first_assign)

@@ -125,15 +125,15 @@ main:                                   # @main
 	subq	$40, %rsp
 	.cfi_def_cfa_offset 48
 	movq	$420, 32(%rsp)                  # imm = 0x1A4
-	movl	$40, %edi
+	movl	$48, %edi
 	callq	malloc@PLT
 	movq	%rax, (%rsp)
 	movl	$4, %edi
 	callq	malloc@PLT
 	movq	%rax, 8(%rsp)
-	movq	$5, (%rax)
+	movq	$6, (%rax)
 	movq	$1, 16(%rsp)
-	movq	$5, 24(%rsp)
+	movq	$6, 24(%rsp)
 	movq	(%rsp), %rax
 	movabsq	$4614838538166547251, %rcx      # imm = 0x400B333333333333
 	movq	%rcx, (%rax)
@@ -144,11 +144,14 @@ main:                                   # @main
 	movabsq	$4615739258092021350, %rcx      # imm = 0x400E666666666666
 	movq	%rcx, 16(%rax)
 	movq	(%rsp), %rax
-	movabsq	$4659760910908637839, %rcx      # imm = 0x40AACBDC28F5C28F
+	movabsq	$4621537642612260864, %rcx      # imm = 0x4023000000000000
 	movq	%rcx, 24(%rax)
 	movq	(%rsp), %rax
-	movabsq	$4681608360884174848, %rcx      # imm = 0x40F86A0000000000
+	movabsq	$4621650232602945126, %rcx      # imm = 0x4023666666666666
 	movq	%rcx, 32(%rax)
+	movq	(%rsp), %rax
+	movabsq	$4621762822593629389, %rcx      # imm = 0x4023CCCCCCCCCCCD
+	movq	%rcx, 40(%rax)
 	movq	%rsp, %rdi
 	callq	JFTensor_dump
 	xorl	%eax, %eax
