@@ -39,6 +39,10 @@ class StellerJ::Parser
         
         attr_accessor :value, :speech
         
+        def leaf?
+            @left.nil? && @right.nil?
+        end
+        
         def inspect
             "TreeNode(#{@value.inspect}, #{@speech.inspect}, #{@left.inspect}, #{@right.inspect})"
         end
@@ -54,6 +58,60 @@ class StellerJ::Parser
                 puts "#{indent}right:"
                 @right.dump(level + 4)
             end
+        end
+        
+        def linearize
+            display = TreeNode === @value ? "(#{@value.linearize})" : @value[0]
+            if @left
+                lval = @left.linearize
+                if @right
+                    rval = @right.linearize
+                    rval = "(#{rval})" unless @right.leaf?
+                    "#{lval}#{display}#{rval}"
+                else
+                    "#{lval}#{display}"
+                end
+            else
+                display
+            end
+        end
+        
+        def dump_graphviz(level=0, node_id=1, my_id=0)
+            if level.zero?
+                puts "digraph G {"
+                puts 'node [shape=record fontname="Consolas"];'
+            end
+            
+            my_label = "node#{my_id}"
+            label_text = case @value
+            when TreeNode
+                @value.linearize
+            else
+                @value[0]
+            end
+            puts "#{my_label} [label=#{label_text.inspect}]"
+            
+            # p @value, @left, @right
+            # puts "/"*30
+            
+            if @left
+                left_id = node_id; node_id += 1
+                left_label = "node#{left_id}"
+                node_id = @left.dump_graphviz(level + 1, node_id, left_id)
+                puts "#{my_label} -> #{left_label}"
+            end
+            
+            if @right
+                right_id = node_id; node_id += 1
+                right_label = "node#{right_id}"
+                node_id = @right.dump_graphviz(level + 1, node_id, right_id) 
+                puts "#{my_label} -> #{right_label}"
+            end
+            
+            if level.zero?
+                puts "}"
+            end
+            node_id
         end
     end
 
@@ -74,7 +132,7 @@ class StellerJ::Parser
             speech = case type
             when :data
                 :noun
-            when :verb, :adverb, :conjunction, :paren_start, :paren_end
+            when :verb, :adverb, :conjunction, :paren_start, :paren_end, :copula
                 type
             when :word
                 @semantic_context[raw] ||= :noun
@@ -121,24 +179,42 @@ class StellerJ::Parser
             subset, idx = index_subsequence group, [ [ :verb, :noun ], :conjunction, [ :verb, :noun ] ]
             unless idx.nil?
                 v1, c, v2 = subset
-                group[idx..idx+2] = TreeNode.new(c.value, :verb, v1, v2)
+                group[idx...idx + subset.size] = TreeNode.new(c, :verb, v1, v2)
                 redo
             end
             # if no VCV, try VA => A
             subset, idx = index_subsequence group, [ :verb, :adverb ]
             unless idx.nil?
                 v, a = subset
-                group[idx..idx+1] = TreeNode.new(a.value, :verb, v)
+                group[idx...idx + subset.size] = TreeNode.new(a, :verb, v)
                 redo
             end
-            # no other condensations
-            raise "leftover conjunction" if group.any? { |item| item.speech == :conjunction }
-            raise "leftover adverb" if group.any? { |item| item.speech == :adverb }
+            
+            # if no VCV or VA, try N=:C | N=:A
+            subset, idx = index_subsequence group, [ :noun, :copula, [ :adverb, :conjunction ] ]
+            unless idx.nil?
+                name, cop, conj = subset
+                group[idx...idx + subset.size] = TreeNode.new(cop.value, conj.speech, name, conj)
+                redo
+            end
+            
+            # no more condensations possible
+            
             break
         }
         
+        # no need to condense a condensed tree
+        if group.size == 1
+            return group[0]
+        end
+        
+        
+        raise "leftover conjunction" if group.any? { |item| item.speech == :conjunction }
+        raise "leftover adverb" if group.any? { |item| item.speech == :adverb }
+        
         # evaluative tree condensation
         # scans from right to left
+        p group
         until group.size == 1
             old_size = group.size
             if end_matches? group, [ :noun, :verb, :noun ]
@@ -147,6 +223,16 @@ class StellerJ::Parser
             elsif end_matches? group, [ :verb, :noun ]
                 *group, v, n = group
                 group << TreeNode.new(v, :noun, n)
+            elsif end_matches? group, [ :noun, :copula, [:noun, :verb, :conjunction] ]
+                *group, n1, c, n2 = group
+                @semantic_context[n1.value[0]] = n2.speech
+                group << TreeNode.new(c.value, n2.speech, n1, n2)
+            # syntax errors
+            elsif end_matches? group, [ :noun, :noun ]
+                raise "syntax error: consecutive nouns"
+            else
+                STDERR.puts "Warn: no match for evaluative tree condensation"
+                STDERR.puts group.map(&:speech).join("; ")
             end
             raise "group size did not change" if old_size == group.size
         end
@@ -166,7 +252,7 @@ class StellerJ::Parser
             parse_line! line
         }
         @trees.each { |tree|
-            tree.dump
+            tree.dump_graphviz
             puts "-" * 70
         }
     end
