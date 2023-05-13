@@ -267,6 +267,8 @@ class StellerJ::LLVMEmitter
     
     def compile
         lines = [
+            *File.read("int.ll").lines.map(&:chomp),
+            *File.read("float.ll").lines.map(&:chomp),
             *File.read("header.ll").lines.map(&:chomp),
             "define dso_local i32 @main() #0 {",
             *@functions["main"].map { |line| "    #{line}" },
