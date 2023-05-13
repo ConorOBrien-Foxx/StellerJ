@@ -172,6 +172,7 @@ class StellerJ::Compiler
         case dtype
         when StellerJ::LLVMEmitter::IType, StellerJ::LLVMEmitter::FType
             @emitter.store name, value, dtype
+            @variables[name].initialized = true
         when StellerJ::LLVMEmitter::JITensor
             values = value.split
             dim = [ values.size ]
@@ -230,14 +231,18 @@ class StellerJ::Compiler
                 # TODO: merge with above?
                 assign_type = type_for_data raw
                 if !dest.initialized
-                    dest.dtype = dtype
+                    dest.dtype = dtype || assign_type
                 end
+                # p ["UWU", assign_type, dest, dtype]
                 raise "Incompatible type: store #{assign_type} into #{dest.dtype}" if dest.dtype != assign_type
                 reg = store dest.name, raw, dest.dtype
                 [ reg, dest.dtype ]
             else
                 raise "unhandled noun type #{type}"
             end
+        
+        else
+            raise "unknown head type #{node.value}"
         end
     end
     
