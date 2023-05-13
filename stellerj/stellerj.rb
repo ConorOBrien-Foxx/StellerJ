@@ -39,10 +39,9 @@ z =: (x * x) + y
 ".strip
 
 code = "
-z =: 3 2 1 4 9 3 2
+x =: 10 10  $  3.4 3.6 3.8   9.5 9.7 9.9
 "
 
-# x =: z  $  3.4 3.6 3.8   9.5 9.7 9.9
 
 tokens = StellerJ.tokenize(code)
 parsed = StellerJ::parse(tokens)

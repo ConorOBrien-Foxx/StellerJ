@@ -146,14 +146,14 @@ define dso_local void @JITensor_dump(%JITensor* noundef %0) #0 {
   %10 = icmp eq i64 %9, 0
   br i1 %10, label %11, label %12
 
-11:                                               ; preds = %1
+11:
   br label %64
 
-12:                                               ; preds = %1
+12:
   store i64 0, i64* %6, align 8
   br label %13
 
-13:                                               ; preds = %61, %12
+13:
   %14 = load i64, i64* %6, align 8
   %15 = load %JITensor*, %JITensor** %2, align 8
   %16 = getelementptr inbounds %JITensor, %JITensor* %15, i32 0, i32 3
@@ -161,7 +161,7 @@ define dso_local void @JITensor_dump(%JITensor* noundef %0) #0 {
   %18 = icmp ult i64 %14, %17
   br i1 %18, label %19, label %64
 
-19:                                               ; preds = %13
+19:
   %20 = load %JITensor*, %JITensor** %2, align 8
   %21 = getelementptr inbounds %JITensor, %JITensor* %20, i32 0, i32 0
   %22 = load i64*, i64** %21, align 8
@@ -178,12 +178,12 @@ define dso_local void @JITensor_dump(%JITensor* noundef %0) #0 {
   store i64 %30, i64* %4, align 8
   br label %31
 
-31:                                               ; preds = %52, %19
+31:
   %32 = load i64, i64* %4, align 8
   %33 = icmp uge i64 %32, 1
   br i1 %33, label %34, label %55
 
-34:                                               ; preds = %31
+34:
   %35 = load %JITensor*, %JITensor** %2, align 8
   %36 = getelementptr inbounds %JITensor, %JITensor* %35, i32 0, i32 1
   %37 = load i64*, i64** %36, align 8
@@ -201,39 +201,39 @@ define dso_local void @JITensor_dump(%JITensor* noundef %0) #0 {
   %48 = icmp eq i64 %45, %47
   br i1 %48, label %49, label %51
 
-49:                                               ; preds = %34
+49:
   store i32 0, i32* %5, align 4
   %50 = call i32 @putchar(i32 noundef 10)
   br label %51
 
-51:                                               ; preds = %49, %34
+51:
   br label %52
 
-52:                                               ; preds = %51
+52:
   %53 = load i64, i64* %4, align 8
   %54 = add i64 %53, -1
   store i64 %54, i64* %4, align 8
   br label %31
 
-55:                                               ; preds = %31
+55:
   %56 = load i32, i32* %5, align 4
   %57 = icmp ne i32 %56, 0
   br i1 %57, label %58, label %60
 
-58:                                               ; preds = %55
+58:
   %59 = call i32 @putchar(i32 noundef 32)
   br label %60
 
-60:                                               ; preds = %58, %55
+60:
   br label %61
 
-61:                                               ; preds = %60
+61:
   %62 = load i64, i64* %6, align 8
   %63 = add i64 %62, 1
   store i64 %63, i64* %6, align 8
   br label %13
 
-64:                                               ; preds = %11, %13
+64:
   ret void
 }
 

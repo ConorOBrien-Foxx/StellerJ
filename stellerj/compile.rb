@@ -5,7 +5,7 @@ require_relative './llvm-emit'
 # TODO: use ! for methods
 
 class StellerJ::Compiler
-    Variable = Struct.new(:name, :dtype, :dim) {
+    Variable = Struct.new(:name, :dtype, :static_value, :dim, :initialized) {
         def register
             "%#{name}"
         end
@@ -83,13 +83,46 @@ class StellerJ::Compiler
         # TODO: mixed conversion?
         # TODO: unary operations
         else
+            # TODO: vectorize
             raise "Unsupported operands for verb #{verb}: #{types}"
         end
         reg = @emitter.primitive prim_name, mono_type, [ lhs_raw, rhs_raw ]
         [ reg, mono_type ]
     end
     
-    def compile_verb(verb, params)
+    def handle_shape(lhs, rhs, dest)
+        # TODO: constant value propagation
+        lhs_raw, lhs_type = lhs
+        rhs_raw, rhs_type = rhs
+        # raise "TODO: $"
+        # @emitter.comment "this is where shape handle goes"
+        # handle_native_primitive "+", ["1", "i64"], ["1", "i64"]
+        
+        # TODO: scalar dimension case e.g. 3 $ 1
+        
+        # static case
+        raise "cannot have non-integral dimensions" if lhs_type == StellerJ::LLVMEmitter::JFTensor
+        if !dest.nil? && /[0-9_]/ === lhs_raw[0] && /[0-9_]/ === rhs_raw[0]
+            dim = lhs_raw.split.map &:to_i
+            total_elements = dim.inject(:*)
+            values = rhs_raw.split
+            if values.size < total_elements
+                values *= (total_elements.to_f / values.size).ceil
+            end
+            if values.size > total_elements
+                values = values[0...total_elements]
+            end
+            # @emitter.alloca dest.name, rhs_type
+            tensor_store_values dest.name, values, dim, rhs_type
+            # p [dim, values, reg]
+            # exit
+            [ nil, rhs_type ]
+        else
+            raise "TODO: dynamic shape $"
+        end
+    end
+    
+    def compile_verb(verb, params, dest)
         lhs, rhs = params
         
         puts "LHS: #{lhs.inspect}"
@@ -97,30 +130,37 @@ class StellerJ::Compiler
         
         case verb
         when "$"
-            raise "TODO: $"
+            handle_shape lhs, rhs, dest
         when "+", "-", "*", "%"
             handle_native_primitive verb, lhs, rhs
         end
     end
     
-    def tensor_store_values(name, values, dim, dtype, first_assign)
-        if first_assign
-            # initialize JFTensor
+    def tensor_store_values(name, values, dim, dtype)
+        if @variables[name] && !@variables[name].initialized
+            # initialize J*Tensor
+            @variables[name].initialized = true
+            @variables[name].dtype = dtype
+            @variables[name].dim = dim unless @variables[name].nil?
             @emitter.init_tensor name, dtype, dim
-            @variables[name].dim = dim
-            
-            values.each.with_index { |value, idx|
-                @emitter.comment "storing #{value} at #{idx}"
-                @emitter.tensor_store name, dim, idx, value, dtype
-            }
         else
-            # copy into JFTensor
+            # copy into J*Tensor
+            p [name, values, dim, dtype]
             raise "TODO: copy values into a JFTensor"
         end
+        
+        p ["GIVEN VALUES", values]
+        values.each.with_index { |value, idx|
+            @emitter.comment "storing value in tensor, #{value} at #{idx}"
+            @emitter.tensor_store name, dim, idx, value, dtype
+        }
+        
+        name
     end
     
     # TODO: integer format static check
-    def store(name, value, dtype, first_assign)
+    # returns a register type?
+    def store(name, value, dtype)
         @last_assigned = name
         case dtype
         when StellerJ::LLVMEmitter::IType, StellerJ::LLVMEmitter::FType
@@ -128,14 +168,15 @@ class StellerJ::Compiler
         when StellerJ::LLVMEmitter::JITensor
             values = value.split
             dim = [ values.size ]
-            tensor_store_values name, values, dim, dtype, first_assign
+            tensor_store_values name, values, dim, dtype
         when StellerJ::LLVMEmitter::JFTensor
+            p "store tensor #{value.inspect}"
             values = value.split.map { |value|
                 # make sure floats are properly floating point
                 value.include?(".") ? value : "#{value}.0"
             }
             dim = [ values.size ]
-            tensor_store_values name, values, dim, dtype, first_assign
+            tensor_store_values name, values, dim, dtype
         else
             raise "Unhandled store operation: #{dtype}"
         end
@@ -153,20 +194,29 @@ class StellerJ::Compiler
                 lhs = value_for_operand node.left
                 rhs = value_for_operand node.right
                 
-                result_reg, dtype = compile_verb raw, [ lhs, rhs ]
+                result_reg, dtype = compile_verb raw, [ lhs, rhs ], dest
                 
                 if dest.nil?
                     # intermediate value stored in register
                     [ result_reg, dtype ]
                 else
-                    first_assign = dest.dtype.nil?
-                    if first_assign
+                    p dest
+                    if !dest.initialized
                         dest.dtype = dtype
                     end
                     raise "Incompatible type: store #{dtype} into #{dest.dtype}" if dest.dtype != dtype
                     # store doesn't update active register count, so we return a nil register
-                    store dest.name, result_reg, dtype, first_assign
-                    [ nil, dtype ]
+                    # p ["store", dest.name, result_reg, dtype]
+                    unless dest.initialized
+                        store dest.name, result_reg, dtype
+                        raise "variable was not initialized by store call" unless dest.initialized
+                        [ nil, dtype ]
+                    else
+                        puts "Hey, already initialized"
+                        @last_assigned = dest.name
+                        # [ dest.name, dtype ]
+                        [ nil, dtype ]
+                    end
                 end
             end
         
@@ -175,13 +225,13 @@ class StellerJ::Compiler
             raw, type = node.value
             case type
             when :data
+                # TODO: merge with above?
                 assign_type = type_for_data raw
-                first_assign = dest.dtype.nil?
-                if first_assign
-                    dest.dtype = assign_type
+                if !dest.initialized
+                    dest.dtype = dtype
                 end
                 raise "Incompatible type: store #{assign_type} into #{dest.dtype}" if dest.dtype != assign_type
-                reg = store dest.name, raw, dest.dtype, first_assign
+                reg = store dest.name, raw, dest.dtype
                 [ reg, dest.dtype ]
             else
                 raise "unhandled noun type #{type}"

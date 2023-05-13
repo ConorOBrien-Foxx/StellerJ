@@ -118,6 +118,7 @@ class StellerJ::LLVMEmitter
     end
     
     def prefix_percent(name)
+        raise "no given name (nil)" if name.nil?
         name[0] == '%' ? name : "%#{name}"
     end
     
