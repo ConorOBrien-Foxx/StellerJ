@@ -54,6 +54,10 @@ class StellerJ::LLVMEmitter
             return: Void,
             args: ["#{JFTensor}*"],
         }
+        @function_data["JITensor_dump"] = {
+            return: Void,
+            args: ["#{JITensor}*"],
+        }
         @registers = {
             "main" => 1
         }
@@ -141,7 +145,7 @@ class StellerJ::LLVMEmitter
         data_size = total_item_count * atom_size
         # reference to the field (i32 0 dereferences, i32 0 gets first field)
         data_ptr = next_register! where
-        add_line where, "#{data_ptr} = getelementptr inbounds %JFTensor, %JFTensor* #{name}, i32 0, i32 0"
+        add_line where, "#{data_ptr} = getelementptr inbounds #{type}, #{type}* #{name}, i32 0, i32 0"
         # call malloc with appropriate size
         ptr_malloc = next_register! where
         add_line where, "#{ptr_malloc} = call noalias i8* @malloc(i64 noundef #{data_size})"
@@ -157,7 +161,7 @@ class StellerJ::LLVMEmitter
         dim_size = dim.size * get_size(IType)
         # reference to the field (i32 0 dereferences, i32 1 gets second field)
         dim_ptr = next_register! where
-        add_line where, "#{dim_ptr} = getelementptr inbounds %JFTensor, %JFTensor* #{name}, i32 0, i32 1"
+        add_line where, "#{dim_ptr} = getelementptr inbounds #{type}, #{type}* #{name}, i32 0, i32 1"
         # call malloc with appropriate size
         ptr_malloc = next_register! where
         add_line where, "#{ptr_malloc} = call noalias i8* @malloc(i64 noundef #{dim_size})"
@@ -240,8 +244,14 @@ class StellerJ::LLVMEmitter
         reg
     end
     
-    def call(name, args, where=@focus)
+    def get_function_data(name)
         data = @function_data[name]
+        raise "unknown function #{name}" if data.nil?
+        data
+    end
+    
+    def call(name, args, where=@focus)
+        data = get_function_data name
         raise "cannot handle non-void yet" if data[:return] != Void
         rtype = data[:return]
         argtypes = data[:args]

@@ -116,6 +116,85 @@ JFTensor_dump:                          # @JFTensor_dump
 	.size	JFTensor_dump, .Lfunc_end2-JFTensor_dump
 	.cfi_endproc
                                         # -- End function
+	.globl	JITensor_dump                   # -- Begin function JITensor_dump
+	.p2align	4, 0x90
+	.type	JITensor_dump,@function
+JITensor_dump:                          # @JITensor_dump
+	.cfi_startproc
+# %bb.0:
+	subq	$40, %rsp
+	.cfi_def_cfa_offset 48
+	movq	%rdi, 16(%rsp)
+	cmpq	$0, 16(%rdi)
+	je	.LBB3_11
+# %bb.1:
+	movq	$0, 8(%rsp)
+	jmp	.LBB3_2
+	.p2align	4, 0x90
+.LBB3_10:                               #   in Loop: Header=BB3_2 Depth=1
+	incq	8(%rsp)
+.LBB3_2:                                # =>This Loop Header: Depth=1
+                                        #     Child Loop BB3_4 Depth 2
+	movq	8(%rsp), %rax
+	movq	16(%rsp), %rcx
+	cmpq	24(%rcx), %rax
+	jae	.LBB3_11
+# %bb.3:                                #   in Loop: Header=BB3_2 Depth=1
+	movq	16(%rsp), %rax
+	movq	(%rax), %rax
+	movq	8(%rsp), %rcx
+	movq	(%rax,%rcx,8), %rsi
+	movl	$.putn_fmt, %edi
+	xorl	%eax, %eax
+	callq	printf@PLT
+	movq	$1, 32(%rsp)
+	movl	$1, 4(%rsp)
+	movq	16(%rsp), %rax
+	movq	16(%rax), %rax
+	decq	%rax
+	movq	%rax, 24(%rsp)
+	jmp	.LBB3_4
+	.p2align	4, 0x90
+.LBB3_7:                                #   in Loop: Header=BB3_4 Depth=2
+	decq	24(%rsp)
+.LBB3_4:                                #   Parent Loop BB3_2 Depth=1
+                                        # =>  This Inner Loop Header: Depth=2
+	cmpq	$0, 24(%rsp)
+	je	.LBB3_8
+# %bb.5:                                #   in Loop: Header=BB3_4 Depth=2
+	movq	16(%rsp), %rax
+	movq	8(%rax), %rax
+	movq	24(%rsp), %rcx
+	movq	32(%rsp), %rsi
+	imulq	(%rax,%rcx,8), %rsi
+	movq	%rsi, 32(%rsp)
+	movq	8(%rsp), %rax
+	xorl	%edx, %edx
+	divq	%rsi
+	decq	%rsi
+	cmpq	%rsi, %rdx
+	jne	.LBB3_7
+# %bb.6:                                #   in Loop: Header=BB3_4 Depth=2
+	movl	$0, 4(%rsp)
+	movl	$10, %edi
+	callq	putchar@PLT
+	jmp	.LBB3_7
+	.p2align	4, 0x90
+.LBB3_8:                                #   in Loop: Header=BB3_2 Depth=1
+	cmpl	$0, 4(%rsp)
+	je	.LBB3_10
+# %bb.9:                                #   in Loop: Header=BB3_2 Depth=1
+	movl	$32, %edi
+	callq	putchar@PLT
+	jmp	.LBB3_10
+.LBB3_11:
+	addq	$40, %rsp
+	.cfi_def_cfa_offset 8
+	retq
+.Lfunc_end3:
+	.size	JITensor_dump, .Lfunc_end3-JITensor_dump
+	.cfi_endproc
+                                        # -- End function
 	.globl	main                            # -- Begin function main
 	.p2align	4, 0x90
 	.type	main,@function
@@ -124,42 +203,37 @@ main:                                   # @main
 # %bb.0:
 	subq	$40, %rsp
 	.cfi_def_cfa_offset 48
-	movq	$420, 32(%rsp)                  # imm = 0x1A4
-	movl	$48, %edi
-	callq	malloc@PLT
-	movq	%rax, (%rsp)
-	movl	$4, %edi
+	movl	$28, %edi
 	callq	malloc@PLT
 	movq	%rax, 8(%rsp)
-	movq	$6, (%rax)
-	movq	$1, 16(%rsp)
-	movq	$6, 24(%rsp)
-	movq	(%rsp), %rax
-	movabsq	$4614838538166547251, %rcx      # imm = 0x400B333333333333
-	movq	%rcx, (%rax)
-	movq	(%rsp), %rax
-	movabsq	$4615288898129284301, %rcx      # imm = 0x400CCCCCCCCCCCCD
-	movq	%rcx, 8(%rax)
-	movq	(%rsp), %rax
-	movabsq	$4615739258092021350, %rcx      # imm = 0x400E666666666666
-	movq	%rcx, 16(%rax)
-	movq	(%rsp), %rax
-	movabsq	$4621537642612260864, %rcx      # imm = 0x4023000000000000
-	movq	%rcx, 24(%rax)
-	movq	(%rsp), %rax
-	movabsq	$4621650232602945126, %rcx      # imm = 0x4023666666666666
-	movq	%rcx, 32(%rax)
-	movq	(%rsp), %rax
-	movabsq	$4621762822593629389, %rcx      # imm = 0x4023CCCCCCCCCCCD
-	movq	%rcx, 40(%rax)
-	movq	%rsp, %rdi
-	callq	JFTensor_dump
+	movl	$4, %edi
+	callq	malloc@PLT
+	movq	%rax, 16(%rsp)
+	movq	$7, (%rax)
+	movq	$1, 24(%rsp)
+	movq	$7, 32(%rsp)
+	movq	8(%rsp), %rax
+	movq	$3, (%rax)
+	movq	8(%rsp), %rax
+	movq	$2, 8(%rax)
+	movq	8(%rsp), %rax
+	movq	$1, 16(%rax)
+	movq	8(%rsp), %rax
+	movq	$4, 24(%rax)
+	movq	8(%rsp), %rax
+	movq	$9, 32(%rax)
+	movq	8(%rsp), %rax
+	movq	$3, 40(%rax)
+	movq	8(%rsp), %rax
+	movq	$2, 48(%rax)
+	leaq	8(%rsp), %rdi
+	callq	JITensor_dump
 	xorl	%eax, %eax
 	addq	$40, %rsp
 	.cfi_def_cfa_offset 8
 	retq
-.Lfunc_end3:
-	.size	main, .Lfunc_end3-main
+.Lfunc_end4:
+	.size	main, .Lfunc_end4-main
 	.cfi_endproc
                                         # -- End function
 	.type	.putn_fmt,@object               # @.putn_fmt

@@ -103,28 +103,39 @@ class StellerJ::Compiler
         end
     end
     
+    def tensor_store_values(name, values, dim, dtype, first_assign)
+        if first_assign
+            # initialize JFTensor
+            @emitter.init_tensor name, dtype, dim
+            @variables[name].dim = dim
+            
+            values.each.with_index { |value, idx|
+                @emitter.comment "storing #{value} at #{idx}"
+                @emitter.tensor_store name, dim, idx, value, dtype
+            }
+        else
+            # copy into JFTensor
+            raise "TODO: copy values into a JFTensor"
+        end
+    end
+    
+    # TODO: integer format static check
     def store(name, value, dtype, first_assign)
         @last_assigned = name
         case dtype
         when StellerJ::LLVMEmitter::IType, StellerJ::LLVMEmitter::FType
             @emitter.store name, value, dtype
-        when StellerJ::LLVMEmitter::JFTensor
+        when StellerJ::LLVMEmitter::JITensor
             values = value.split
             dim = [ values.size ]
-            if first_assign
-                # initialize JFTensor
-                @emitter.init_tensor name, dtype, dim
-                @variables[name].dim = dim
-                
-                values.each.with_index { |value, idx|
-                    value = value.include?(".") ? value : "#{value}.0"
-                    @emitter.comment "storing #{value} at #{idx}"
-                    @emitter.tensor_store name, dim, idx, value, dtype
-                }
-            else
-                # copy into JFTensor
-                raise "TODO: copy values into a JFTensor"
-            end
+            tensor_store_values name, values, dim, dtype, first_assign
+        when StellerJ::LLVMEmitter::JFTensor
+            values = value.split.map { |value|
+                # make sure floats are properly floating point
+                value.include?(".") ? value : "#{value}.0"
+            }
+            dim = [ values.size ]
+            tensor_store_values name, values, dim, dtype, first_assign
         else
             raise "Unhandled store operation: #{dtype}"
         end
@@ -230,9 +241,12 @@ class StellerJ::Compiler
         when StellerJ::LLVMEmitter::FType
             reg = @emitter.load to_print.name, to_print.dtype
             @emitter.call "putd", [ reg ]
-        else
-            # reg = @emitter.load to_print.name, to_print.dtype
+        when StellerJ::LLVMEmitter::JITensor
+            @emitter.call "JITensor_dump", [ "%#{to_print.name}" ]
+        when StellerJ::LLVMEmitter::JFTensor
             @emitter.call "JFTensor_dump", [ "%#{to_print.name}" ]
+        else
+            raise "Cannot print datatype #{to_print.dtype}"
         end
         @emitter.compile
     end
