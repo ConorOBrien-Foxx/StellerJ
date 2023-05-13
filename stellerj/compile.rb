@@ -149,7 +149,14 @@ class StellerJ::Compiler
             raise "TODO: copy values into a JFTensor"
         end
         
-        p ["GIVEN VALUES", values]
+        # p ["GIVEN VALUES", values]
+        if dtype == StellerJ::LLVMEmitter::JFTensor
+            values.map! { |value|
+                # make sure floats are properly floating point
+                value.include?(".") ? value : "#{value}.0"
+            }
+        end
+        
         values.each.with_index { |value, idx|
             @emitter.comment "storing value in tensor, #{value} at #{idx}"
             @emitter.tensor_store name, dim, idx, value, dtype
@@ -170,11 +177,6 @@ class StellerJ::Compiler
             dim = [ values.size ]
             tensor_store_values name, values, dim, dtype
         when StellerJ::LLVMEmitter::JFTensor
-            p "store tensor #{value.inspect}"
-            values = value.split.map { |value|
-                # make sure floats are properly floating point
-                value.include?(".") ? value : "#{value}.0"
-            }
             dim = [ values.size ]
             tensor_store_values name, values, dim, dtype
         else

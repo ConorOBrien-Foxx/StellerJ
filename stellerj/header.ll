@@ -19,6 +19,7 @@ define dso_local void @putn(i64 %number) #0 {
     call i32 (i8*, ...) @printf(i8* %spec, i64 %number)
     ret void
 }
+
 ; write a single double
 @.putd_fmt = internal constant [3 x i8] c"%g\00", align 1
 define dso_local void @putd(double %number) #0 {
@@ -27,7 +28,7 @@ define dso_local void @putd(double %number) #0 {
     ret void
 }
 
-; dump a float tensor
+; dump a float tensor (modified from clang C++ code)
 define dso_local void @JFTensor_dump(%JFTensor* noundef %0) #0 {
   %2 = alloca %JFTensor*, align 8
   %3 = alloca i64, align 8
@@ -132,7 +133,7 @@ define dso_local void @JFTensor_dump(%JFTensor* noundef %0) #0 {
   ret void
 }
 
-; dump an integer tensor
+; dump an integer tensor (modified from clang C++ code)
 define dso_local void @JITensor_dump(%JITensor* noundef %0) #0 {
   %2 = alloca %JITensor*, align 8
   %3 = alloca i64, align 8

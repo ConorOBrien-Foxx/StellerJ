@@ -137,13 +137,16 @@ class StellerJ::LLVMEmitter
         name = prefix_percent name
         
         atom_type = tensor_atom_type(type)
-        atom_size = get_size(atom_type)
+        # this errors for (say) IType because atom_size would be 4
+        # is this the correct approach? is the wrong pointer kind being stored?
+        # TODO: XXX: this might be a source of errors
+        atom_size = get_size("#{atom_type}*")
         total_item_count = dim.inject(:*)
         
         ### allocate first field (atom_type*) ###
-        comment "allocating tensor data"
         # the amount of memory we want: Product(dim) * byte_size
         data_size = total_item_count * atom_size
+        comment "allocating tensor data #{total_item_count} * #{atom_size} = #{data_size}"
         # reference to the field (i32 0 dereferences, i32 0 gets first field)
         data_ptr = next_register! where
         add_line where, "#{data_ptr} = getelementptr inbounds #{type}, #{type}* #{name}, i32 0, i32 0"
