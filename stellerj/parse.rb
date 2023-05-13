@@ -162,6 +162,8 @@ class StellerJ::Parser
     end
     
     def finalize_group(group)
+        return if group.empty?
+        
         if group.any? Array
             group = group.flat_map { |item|
                 case item
@@ -235,7 +237,7 @@ class StellerJ::Parser
                 raise "syntax error: consecutive nouns"
             else
                 STDERR.puts "Warn: no match for evaluative tree condensation"
-                STDERR.puts group.map(&:speech).join("; ")
+                STDERR.puts "[ #{group.map(&:speech).join("; ")} ]"
             end
             raise "group size did not change" if old_size == group.size
         end
@@ -243,6 +245,7 @@ class StellerJ::Parser
     end
     
     def parse_line!(line)
+        return if line.empty?
         classified = classify line
         grouped = structure_parens classified
         tree = finalize_group grouped

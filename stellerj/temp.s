@@ -11,7 +11,7 @@ putn:                                   # @putn
 	movq	%rdi, %rsi
 	movl	$.putn_fmt, %edi
 	xorl	%eax, %eax
-	callq	printf
+	callq	printf@PLT
 	popq	%rax
 	.cfi_def_cfa_offset 8
 	retq
@@ -29,7 +29,7 @@ putd:                                   # @putd
 	.cfi_def_cfa_offset 16
 	movl	$.putd_fmt, %edi
 	movb	$1, %al
-	callq	printf
+	callq	printf@PLT
 	popq	%rax
 	.cfi_def_cfa_offset 8
 	retq
@@ -37,33 +37,126 @@ putd:                                   # @putd
 	.size	putd, .Lfunc_end1-putd
 	.cfi_endproc
                                         # -- End function
-	.section	.rodata.cst8,"aM",@progbits,8
-	.p2align	3                               # -- Begin function main
-.LCPI2_0:
-	.quad	0x405e43d70a3d70a5              # double 121.06000000000002
-	.text
-	.globl	main
+	.globl	JFTensor_dump                   # -- Begin function JFTensor_dump
+	.p2align	4, 0x90
+	.type	JFTensor_dump,@function
+JFTensor_dump:                          # @JFTensor_dump
+	.cfi_startproc
+# %bb.0:
+	subq	$40, %rsp
+	.cfi_def_cfa_offset 48
+	movq	%rdi, 16(%rsp)
+	cmpq	$0, 16(%rdi)
+	je	.LBB2_11
+# %bb.1:
+	movq	$0, 8(%rsp)
+	jmp	.LBB2_2
+	.p2align	4, 0x90
+.LBB2_10:                               #   in Loop: Header=BB2_2 Depth=1
+	incq	8(%rsp)
+.LBB2_2:                                # =>This Loop Header: Depth=1
+                                        #     Child Loop BB2_4 Depth 2
+	movq	8(%rsp), %rax
+	movq	16(%rsp), %rcx
+	cmpq	24(%rcx), %rax
+	jae	.LBB2_11
+# %bb.3:                                #   in Loop: Header=BB2_2 Depth=1
+	movq	16(%rsp), %rax
+	movq	(%rax), %rax
+	movq	8(%rsp), %rcx
+	movsd	(%rax,%rcx,8), %xmm0            # xmm0 = mem[0],zero
+	movl	$.putd_fmt, %edi
+	movb	$1, %al
+	callq	printf@PLT
+	movq	$1, 32(%rsp)
+	movl	$1, 4(%rsp)
+	movq	16(%rsp), %rax
+	movq	16(%rax), %rax
+	decq	%rax
+	movq	%rax, 24(%rsp)
+	jmp	.LBB2_4
+	.p2align	4, 0x90
+.LBB2_7:                                #   in Loop: Header=BB2_4 Depth=2
+	decq	24(%rsp)
+.LBB2_4:                                #   Parent Loop BB2_2 Depth=1
+                                        # =>  This Inner Loop Header: Depth=2
+	cmpq	$0, 24(%rsp)
+	je	.LBB2_8
+# %bb.5:                                #   in Loop: Header=BB2_4 Depth=2
+	movq	16(%rsp), %rax
+	movq	8(%rax), %rax
+	movq	24(%rsp), %rcx
+	movq	32(%rsp), %rsi
+	imulq	(%rax,%rcx,8), %rsi
+	movq	%rsi, 32(%rsp)
+	movq	8(%rsp), %rax
+	xorl	%edx, %edx
+	divq	%rsi
+	decq	%rsi
+	cmpq	%rsi, %rdx
+	jne	.LBB2_7
+# %bb.6:                                #   in Loop: Header=BB2_4 Depth=2
+	movl	$0, 4(%rsp)
+	movl	$10, %edi
+	callq	putchar@PLT
+	jmp	.LBB2_7
+	.p2align	4, 0x90
+.LBB2_8:                                #   in Loop: Header=BB2_2 Depth=1
+	cmpl	$0, 4(%rsp)
+	je	.LBB2_10
+# %bb.9:                                #   in Loop: Header=BB2_2 Depth=1
+	movl	$32, %edi
+	callq	putchar@PLT
+	jmp	.LBB2_10
+.LBB2_11:
+	addq	$40, %rsp
+	.cfi_def_cfa_offset 8
+	retq
+.Lfunc_end2:
+	.size	JFTensor_dump, .Lfunc_end2-JFTensor_dump
+	.cfi_endproc
+                                        # -- End function
+	.globl	main                            # -- Begin function main
 	.p2align	4, 0x90
 	.type	main,@function
 main:                                   # @main
 	.cfi_startproc
 # %bb.0:
-	subq	$24, %rsp
-	.cfi_def_cfa_offset 32
-	movabsq	$4622044297570340045, %rax      # imm = 0x4024CCCCCCCCCCCD
-	movq	%rax, 16(%rsp)
-	movabsq	$4623451672453893325, %rax      # imm = 0x4029CCCCCCCCCCCD
-	movq	%rax, 8(%rsp)
-	movabsq	$4638219257107017893, %rax      # imm = 0x405E43D70A3D70A5
+	subq	$40, %rsp
+	.cfi_def_cfa_offset 48
+	movq	$420, 32(%rsp)                  # imm = 0x1A4
+	movl	$40, %edi
+	callq	malloc@PLT
 	movq	%rax, (%rsp)
-	movsd	.LCPI2_0(%rip), %xmm0           # xmm0 = mem[0],zero
-	callq	putd
+	movl	$4, %edi
+	callq	malloc@PLT
+	movq	%rax, 8(%rsp)
+	movq	$5, (%rax)
+	movq	$1, 16(%rsp)
+	movq	$5, 24(%rsp)
+	movq	(%rsp), %rax
+	movabsq	$4614838538166547251, %rcx      # imm = 0x400B333333333333
+	movq	%rcx, (%rax)
+	movq	(%rsp), %rax
+	movabsq	$4615288898129284301, %rcx      # imm = 0x400CCCCCCCCCCCCD
+	movq	%rcx, 8(%rax)
+	movq	(%rsp), %rax
+	movabsq	$4615739258092021350, %rcx      # imm = 0x400E666666666666
+	movq	%rcx, 16(%rax)
+	movq	(%rsp), %rax
+	movabsq	$4659760910908637839, %rcx      # imm = 0x40AACBDC28F5C28F
+	movq	%rcx, 24(%rax)
+	movq	(%rsp), %rax
+	movabsq	$4681608360884174848, %rcx      # imm = 0x40F86A0000000000
+	movq	%rcx, 32(%rax)
+	movq	%rsp, %rdi
+	callq	JFTensor_dump
 	xorl	%eax, %eax
-	addq	$24, %rsp
+	addq	$40, %rsp
 	.cfi_def_cfa_offset 8
 	retq
-.Lfunc_end2:
-	.size	main, .Lfunc_end2-main
+.Lfunc_end3:
+	.size	main, .Lfunc_end3-main
 	.cfi_endproc
                                         # -- End function
 	.type	.putn_fmt,@object               # @.putn_fmt

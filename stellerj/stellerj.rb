@@ -38,11 +38,17 @@ y =: 12.9
 z =: (x * x) + y
 ".strip
 
+code = "
+z =: 420
+x =: 3.4 3.6 3.8 3429.93 100000
+"#.split
+
 tokens = StellerJ.tokenize(code)
 parsed = StellerJ::parse(tokens)
 compiled = StellerJ::compile(parsed)
 
-puts compiled
+start = compiled.index "define dso_local i32 @main()"
+puts compiled[start..-1]
 File.write "temp.ll", compiled
 
 unless Gem.win_platform?

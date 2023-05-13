@@ -5,7 +5,7 @@ require_relative './llvm-emit'
 # TODO: use ! for methods
 
 class StellerJ::Compiler
-    Variable = Struct.new(:name, :dtype) {
+    Variable = Struct.new(:name, :dtype, :dim) {
         def register
             "%#{name}"
         end
@@ -19,7 +19,15 @@ class StellerJ::Compiler
     end
     
     def type_for_data(data)
-        if data.include? "."
+        if data.include? " "
+            entries = data.split
+            types = entries.map { |entry| type_for_data entry }
+            if types.include? StellerJ::LLVMEmitter::FType
+                StellerJ::LLVMEmitter::JFTensor
+            else
+                StellerJ::LLVMEmitter::JITensor
+            end
+        elsif data.include? "."
             StellerJ::LLVMEmitter::FType
         else
             StellerJ::LLVMEmitter::IType
@@ -86,9 +94,31 @@ class StellerJ::Compiler
         [ reg, mono_type ]
     end
     
-    def store(name, value, dtype)
+    def store(name, value, dtype, first_assign)
         @last_assigned = name
-        @emitter.store name, value, dtype
+        case dtype
+        when StellerJ::LLVMEmitter::IType, StellerJ::LLVMEmitter::FType
+            @emitter.store name, value, dtype
+        when StellerJ::LLVMEmitter::JFTensor
+            values = value.split
+            dim = [ values.size ]
+            if first_assign
+                # initialize JFTensor
+                @emitter.init_tensor name, dtype, dim
+                @variables[name].dim = dim
+                
+                values.each.with_index { |value, idx|
+                    value = value.include?(".") ? value : "#{value}.0"
+                    @emitter.comment "storing #{value} at #{idx}"
+                    @emitter.tensor_store name, dim, idx, value, dtype
+                }
+            else
+                # copy into JFTensor
+                raise "TODO: copy values into a JFTensor"
+            end
+        else
+            raise "Unhandled store operation: #{dtype}"
+        end
     end
     
     def compile_value(node, dest)
@@ -109,12 +139,13 @@ class StellerJ::Compiler
                     # intermediate value stored in register
                     [ result_reg, dtype ]
                 else
-                    if dest.dtype.nil?
+                    first_assign = dest.dtype.nil?
+                    if first_assign
                         dest.dtype = dtype
                     end
                     raise "Incompatible type: store #{dtype} into #{dest.dtype}" if dest.dtype != dtype
                     # store doesn't update active register count, so we return a nil register
-                    store dest.name, result_reg, dtype
+                    store dest.name, result_reg, dtype, first_assign
                     [ nil, dtype ]
                 end
             end
@@ -125,11 +156,12 @@ class StellerJ::Compiler
             case type
             when :data
                 assign_type = type_for_data raw
-                if dest.dtype.nil?
+                first_assign = dest.dtype.nil?
+                if first_assign
                     dest.dtype = assign_type
                 end
                 raise "Incompatible type: store #{assign_type} into #{dest.dtype}" if dest.dtype != assign_type
-                reg = store dest.name, raw, dest.dtype
+                reg = store dest.name, raw, dest.dtype, first_assign
                 [ reg, dest.dtype ]
             else
                 raise "unhandled noun type #{type}"
@@ -154,6 +186,7 @@ class StellerJ::Compiler
                 @variables[name] = variable
                 
                 @emitter.alloca variable.name, :backfill
+                # TODO: initialization code for tensors
             else
                 variable = @variables[name]
             end
@@ -189,7 +222,8 @@ class StellerJ::Compiler
             reg = @emitter.load to_print.name, to_print.dtype
             @emitter.call "putd", [ reg ]
         else
-            raise "Cannot print #{to_print.dtype} dtype"
+            # reg = @emitter.load to_print.name, to_print.dtype
+            @emitter.call "JFTensor_dump", [ "%#{to_print.name}" ]
         end
         @emitter.compile
     end
