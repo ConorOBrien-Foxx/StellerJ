@@ -14,6 +14,12 @@ module StellerJ
     # StellerJ::Parser
     require_relative './parse.rb'
     
+    # StellerJ::Compile
+    require_relative './compile.rb'
+    
+    # StellerJ::LLVMEmitter
+    require_relative './llvm-emit.rb'
+    
     # aliases for poignant methods
     def self.tokenize(code)
         Tokenizer::tokenize code
@@ -21,31 +27,29 @@ module StellerJ
     def self.parse(tokens)
         Parser::parse tokens
     end
+    def self.compile(tokens)
+        Compiler::compile tokens
+    end
 end
 
 code = "
-3 -(x =: @)+ 6
-+(y =: /)~ i. 9
+x =: 10.4
+y =: 12.9
+z =: (x * x) + y
 ".strip
-# {{ x + y }}/ 4 3 NB. lol
-# 5 (+@-&*) 3
-# 2 * ((4 + y=:9) * 7 % - x=:3)
-
-# x =: 3 + y =: 4
-# verb =: +
-# echo 3 + 4
-# 5 *@+&- 3
-# 2 * ((4 + 9) * 7 % - 3)
-# 3 + 4 * 5 - 9
-# 4 + 9 * - 3
-# x =. 'adsdf'
-# y =. (5 - 3) + 5
-# echo x + y
 
 tokens = StellerJ.tokenize(code)
-p StellerJ::parse(tokens)
+parsed = StellerJ::parse(tokens)
+compiled = StellerJ::compile(parsed)
 
-# StellerJ.tokenize(code).each { |line|
-    # p line
-# }
+puts compiled
+File.write "temp.ll", compiled
 
+unless Gem.win_platform?
+    puts "Compiling..."
+    system "llc temp.ll && gcc -no-pie temp.s -o temp.out"
+    if $?.exitstatus == 0
+        puts "Running..."
+        system "./temp.out"
+    end
+end

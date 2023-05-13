@@ -37,7 +37,7 @@ class StellerJ::Parser
             @right = right
         end
         
-        attr_accessor :value, :speech
+        attr_accessor :value, :speech, :left, :right
         
         def leaf?
             @left.nil? && @right.nil?
@@ -135,6 +135,7 @@ class StellerJ::Parser
             when :verb, :adverb, :conjunction, :paren_start, :paren_end, :copula
                 type
             when :word
+                # inferring on RHS -> undefined
                 @semantic_context[raw] ||= :noun
                 @semantic_context[raw]
             else
@@ -172,6 +173,10 @@ class StellerJ::Parser
             }
         end
         
+        # TODO: finalize control structures
+        # TODO: finalize direct definitions (recursively)
+        # ddfn: code -> verb
+        
         # collapse higher-order operators (conjunctions, adverbs)
         # scans from left to right
         loop {
@@ -208,13 +213,11 @@ class StellerJ::Parser
             return group[0]
         end
         
-        
         raise "leftover conjunction" if group.any? { |item| item.speech == :conjunction }
         raise "leftover adverb" if group.any? { |item| item.speech == :adverb }
         
         # evaluative tree condensation
         # scans from right to left
-        p group
         until group.size == 1
             old_size = group.size
             if end_matches? group, [ :noun, :verb, :noun ]
@@ -243,7 +246,6 @@ class StellerJ::Parser
         classified = classify line
         grouped = structure_parens classified
         tree = finalize_group grouped
-        # TODO: infer type from copula to populate @semantic_context
         @trees << tree
     end
     
@@ -251,10 +253,11 @@ class StellerJ::Parser
         @tokens.map! { |line|
             parse_line! line
         }
-        @trees.each { |tree|
-            tree.dump_graphviz
-            puts "-" * 70
-        }
+        # @trees.each { |tree|
+            # tree.dump_graphviz
+            # puts "-" * 70
+        # }
+        @trees
     end
     
     def self.parse(tokens)

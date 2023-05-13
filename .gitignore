@@ -1,3 +1,5 @@
 *.exe
 *.xlsx
 timings/old-tasks
+*.out
+*.exe
