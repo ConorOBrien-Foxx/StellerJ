@@ -45,8 +45,8 @@ class StellerJ::Compiler
                     [ raw, dtype ]
                 when :word
                     variable = @variables[raw]
-                    temp = @emitter.load variable.name, variable.dtype
-                    [ temp, variable.dtype ]
+                    # temp = @emitter.load variable.name, variable.dtype
+                    [ variable.name, variable.dtype ]
                 else
                     raise "unimplemented: value for noun #{type}"
                 end
@@ -58,36 +58,68 @@ class StellerJ::Compiler
         end
     end
     
-    def handle_native_primitive(verb, lhs, rhs)
+    def to_temporary(name, type)
+        if name[0] == '%'
+            name
+        else
+            @emitter.load name, type
+        end
+    end
+    
+    def handle_native_primitive(verb, lhs, rhs, dest)
         lhs_raw, lhs_type = lhs
         rhs_raw, rhs_type = rhs
         types = [ lhs_type, rhs_type ].compact
         case types
-        when StellerJ::LLVMEmitter::ITypePair
+        when [ StellerJ::LLVMEmitter::IType, StellerJ::LLVMEmitter::IType ]
             # TODO: int, int -> float for division?
-            mono_type = types[0]
+            p ["loading", lhs, rhs]
+            lhs_reg = to_temporary lhs_raw, lhs_type
+            rhs_reg = to_temporary rhs_raw, rhs_type
             prim_name = {
                 "+" => "add",
                 "-" => "sub",
                 "*" => "mul",
                 "%" => "sdiv",
             }[verb]
-        when StellerJ::LLVMEmitter::FTypePair
-            mono_type = types[0]
+            reg = @emitter.primitive prim_name, lhs_type, [ lhs_reg, rhs_reg ]
+            [ reg, lhs_type ]
+        when [ StellerJ::LLVMEmitter::FType, StellerJ::LLVMEmitter::FType ]
+            p ["loading", lhs, rhs]
+            lhs_reg = to_temporary lhs_raw, lhs_type
+            rhs_reg = to_temporary rhs_raw, rhs_type
             prim_name = {
                 "+" => "fadd",
                 "-" => "fsub",
                 "*" => "fmul",
                 "%" => "fdiv",
             }[verb]
+            reg = @emitter.primitive prim_name, lhs_type, [ lhs_reg, rhs_reg ]
+            [ reg, lhs_type ]
         # TODO: mixed conversion?
         # TODO: unary operations
+        when [ StellerJ::LLVMEmitter::JITensor, StellerJ::LLVMEmitter::JITensor ]
+            if dest.nil?
+                raise "TODO: anonymous operation"
+            else
+                method_name = {
+                    "+" => "JITensor_add_vec_vec",
+                }[verb]
+                raise "Unimplemented: #{verb} #{types}" if method_name.nil?
+                # reg = @emitter.primitive prim_name, lhs_type, [ lhs_raw, rhs_raw ]
+                # p ["HECK UWU", lhs, rhs, dest]
+                
+                dest.initialized = true
+                dest.dtype = lhs_type
+                @emitter.clear_tensor dest.name, lhs_type
+                @emitter.call method_name, [ "%#{lhs_raw}", "%#{rhs_raw}", "%#{dest.name}" ]
+                # TODO: there might be something fucky about this
+                # raise
+                [ nil, lhs_type ]
+            end
         else
-            # TODO: vectorize
             raise "Unsupported operands for verb #{verb}: #{types}"
         end
-        reg = @emitter.primitive prim_name, mono_type, [ lhs_raw, rhs_raw ]
-        [ reg, mono_type ]
     end
     
     def handle_shape(lhs, rhs, dest)
@@ -132,7 +164,7 @@ class StellerJ::Compiler
         when "$"
             handle_shape lhs, rhs, dest
         when "+", "-", "*", "%"
-            handle_native_primitive verb, lhs, rhs
+            handle_native_primitive verb, lhs, rhs, dest
         end
     end
     
@@ -169,6 +201,7 @@ class StellerJ::Compiler
     # returns a register type?
     def store(name, value, dtype)
         @last_assigned = name
+        raise "Trying to store nil value into #{name} (#{dtype})" if value.nil?
         case dtype
         when StellerJ::LLVMEmitter::IType, StellerJ::LLVMEmitter::FType
             @emitter.store name, value, dtype
@@ -192,8 +225,9 @@ class StellerJ::Compiler
             raw, type = head.value
             case type
             when :verb
-                p node.left, node.right
+                p ["left",node.left, "right",node.right]
                 # we need temporaries for each side
+                # exit
                 lhs = value_for_operand node.left
                 rhs = value_for_operand node.right
                 
@@ -207,6 +241,7 @@ class StellerJ::Compiler
                     if !dest.initialized
                         dest.dtype = dtype
                     end
+                    raise "No dtype for #{dest}" if dest.dtype.nil?
                     raise "Incompatible type: store #{dtype} into #{dest.dtype}" if dest.dtype != dtype
                     # store doesn't update active register count, so we return a nil register
                     # p ["store", dest.name, result_reg, dtype]
@@ -233,7 +268,8 @@ class StellerJ::Compiler
                 if !dest.initialized
                     dest.dtype = dtype || assign_type
                 end
-                # p ["UWU", assign_type, dest, dtype]
+                p ["UWU", assign_type, dest, dtype, raw]
+                raise "No dtype for #{dest}" if dest.dtype.nil?
                 raise "Incompatible type: store #{assign_type} into #{dest.dtype}" if dest.dtype != assign_type
                 reg = store dest.name, raw, dest.dtype
                 [ reg, dest.dtype ]

@@ -1,6 +1,7 @@
 # API to emit llvm
 
 class StellerJ::LLVMEmitter
+    TENSOR_SIZE = 32 # 4 fields x 8 bytes
     IType = "i64"
     FType = "double"
     Void = "void"
@@ -31,9 +32,6 @@ class StellerJ::LLVMEmitter
         "[#{n} x #{FType}]"
     end
     
-    ITypePair = [ IType, IType ]
-    FTypePair = [ FType, FType ]
-    
     def initialize
         @functions = {}
         @functions["main"] = []
@@ -46,6 +44,14 @@ class StellerJ::LLVMEmitter
             return: Void,
             args: [IType],
         }
+        @function_data["JITensor_dump"] = {
+            return: Void,
+            args: ["#{JITensor}*"],
+        }
+        @function_data["JITensor_add_vec_vec"] = {
+            return: Void,
+            args: ["#{JITensor}*", "#{JITensor}*", "#{JITensor}*"],
+        }
         @function_data["putd"] = {
             return: Void,
             args: [FType],
@@ -53,10 +59,6 @@ class StellerJ::LLVMEmitter
         @function_data["JFTensor_dump"] = {
             return: Void,
             args: ["#{JFTensor}*"],
-        }
-        @function_data["JITensor_dump"] = {
-            return: Void,
-            args: ["#{JITensor}*"],
         }
         @registers = {
             "main" => 1
@@ -93,6 +95,13 @@ class StellerJ::LLVMEmitter
                 add_line where, "#{name} = alloca #{type}, align #{size}"
             end
         end
+    end
+    
+    def clear_tensor(name, type, where=@focus)
+        name = prefix_percent name
+        downcast = next_register!
+        add_line where, "#{downcast} = bitcast #{type}* #{name} to i8*"
+        add_line where, "call void @llvm.memset.p0i8.i64(i8* align 8 #{downcast}, i8 0, i64 #{TENSOR_SIZE}, i1 false)"
     end
     
     def backfill(idx, args, where=@focus)
