@@ -2,6 +2,7 @@
 *.xlsx
 timings/old-tasks
 *.out
+*.out.ijs
 *.exe
 stellerj/temp.ll
 stellerj/temp.s
