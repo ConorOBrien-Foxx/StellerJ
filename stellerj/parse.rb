@@ -46,6 +46,10 @@ class StellerJ::Parser
         def inspect
             "TreeNode(#{@value.inspect}, #{@speech.inspect}, #{@left.inspect}, #{@right.inspect})"
         end
+
+        def can_find?(&block)
+            block[@value] || @left&.can_find?(&block) || @right&.can_find?(&block) 
+        end
         
         def dump(level=0)
             indent = " " * level

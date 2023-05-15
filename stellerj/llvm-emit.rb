@@ -52,6 +52,14 @@ class StellerJ::LLVMEmitter
             return: Void,
             args: ["#{JITensor}*", "#{JITensor}*", "#{JITensor}*"],
         }
+        @function_data["JITensor_copy_shape"] = {
+            return: Void,
+            args: ["#{JITensor}*", "#{JITensor}*"],
+        }
+        @function_data["JITensor_copy_value"] = {
+            return: Void,
+            args: ["#{JITensor}*", "#{JITensor}*"],
+        }
         # @function_data["putd"] = {
         #     return: Void,
         #     args: [FType],
@@ -111,8 +119,10 @@ class StellerJ::LLVMEmitter
     end
     
     def notify_type(name, type, where=@focus)
-        size = get_size(type)
         name = prefix_percent name
+        # TODO: warn for duplicate type notices?
+        return if @type_backfill[name].nil?
+        size = get_size(type)
         idx = @type_backfill[name]
         if size == :dont_specify
             @functions[where][idx] = "#{@functions[where][idx].first}#{type}"

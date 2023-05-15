@@ -55,6 +55,11 @@ void JITensor_copy_shape(struct JITensor* basis, struct JITensor* out) {
     }
 }
 
+void JITensor_copy_value(struct JITensor* basis, struct JITensor* out) {
+    JITensor_copy_shape(basis, out);
+    memcpy(out->data, basis->data, basis->total * sizeof(*out->data));
+}
+
 void JITensor_add_vec_vec(struct JITensor* lhs, struct JITensor* rhs, struct JITensor* out) {
     // todo: learn how to error
     if(!JITensor_same_dim(lhs, rhs)) return;
@@ -81,8 +86,10 @@ int main() {
     puts("- is -");
     
     struct JITensor out = { 0, 0, 0, 0 };
+    struct JITensor tmp = { 0, 0, 0, 0 };
 
     JITensor_add_vec_vec(&a, &b, &out);
+    JITensor_copy_value(&out, &tmp);
     
-    JITensor_dump(&out);
+    JITensor_dump(&tmp);
 }

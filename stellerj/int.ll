@@ -283,6 +283,30 @@ define dso_local void @JITensor_copy_shape(%JITensor* noundef %0, %JITensor* nou
   ret void
 }
 
+define dso_local void @JITensor_copy_value(%JITensor* noundef %0, %JITensor* noundef %1) #0 {
+  %3 = alloca %JITensor*, align 8
+  %4 = alloca %JITensor*, align 8
+  store %JITensor* %0, %JITensor** %3, align 8
+  store %JITensor* %1, %JITensor** %4, align 8
+  %5 = load %JITensor*, %JITensor** %3, align 8
+  %6 = load %JITensor*, %JITensor** %4, align 8
+  call void @JITensor_copy_shape(%JITensor* noundef %5, %JITensor* noundef %6)
+  %7 = load %JITensor*, %JITensor** %4, align 8
+  %8 = getelementptr inbounds %JITensor, %JITensor* %7, i32 0, i32 0
+  %9 = load i64*, i64** %8, align 8
+  %10 = bitcast i64* %9 to i8*
+  %11 = load %JITensor*, %JITensor** %3, align 8
+  %12 = getelementptr inbounds %JITensor, %JITensor* %11, i32 0, i32 0
+  %13 = load i64*, i64** %12, align 8
+  %14 = bitcast i64* %13 to i8*
+  %15 = load %JITensor*, %JITensor** %3, align 8
+  %16 = getelementptr inbounds %JITensor, %JITensor* %15, i32 0, i32 3
+  %17 = load i64, i64* %16, align 8
+  %18 = mul i64 %17, 8
+  call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 8 %10, i8* align 8 %14, i64 %18, i1 false)
+  ret void
+}
+
 ; adds two vectors and stores output in an output vector
 define dso_local void @JITensor_add_vec_vec(%JITensor* noundef %0, %JITensor* noundef %1, %JITensor* noundef %2) #0 {
   %4 = alloca %JITensor*, align 8

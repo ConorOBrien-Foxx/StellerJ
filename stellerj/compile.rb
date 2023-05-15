@@ -9,6 +9,14 @@ class StellerJ::Compiler
         def register
             "%#{name}"
         end
+
+        def to_named_temp
+            Variable.new(self.temp_name, dtype, nil, nil, false)
+        end
+
+        def temp_name
+            "#{name}_temp"
+        end
     }
 
     def initialize(parsed)
@@ -34,7 +42,7 @@ class StellerJ::Compiler
         end
     end
     
-    def value_for_operand(operand)
+    def value_for_operand(operand, dest)
         case operand.speech
         when :noun
             if operand.leaf?
@@ -51,7 +59,8 @@ class StellerJ::Compiler
                     raise "unimplemented: value for noun #{type}"
                 end
             else
-                reg, dtype = compile_value operand, nil
+                p ["Compiling operand", operand]
+                reg, dtype = compile_value operand, dest
             end
         else
             raise "unimplemented: value for #{operand.speech}"
@@ -100,6 +109,7 @@ class StellerJ::Compiler
         # TODO: unary operations
         when [ StellerJ::LLVMEmitter::JITensor, StellerJ::LLVMEmitter::JITensor ]
             if dest.nil?
+                p [lhs, rhs, dest]
                 raise "TODO: anonymous operation"
             else
                 method_name = {
@@ -108,14 +118,16 @@ class StellerJ::Compiler
                 raise "Unimplemented: #{verb} #{types}" if method_name.nil?
                 # reg = @emitter.primitive prim_name, lhs_type, [ lhs_raw, rhs_raw ]
                 # p ["HECK UWU", lhs, rhs, dest]
-                
-                dest.initialized = true
-                dest.dtype = lhs_type
-                @emitter.clear_tensor dest.name, lhs_type
+
+                if !dest.initialized
+                    dest.initialized = true
+                    dest.dtype = lhs_type
+                    @emitter.clear_tensor dest.name, lhs_type
+                end
                 @emitter.call method_name, [ "%#{lhs_raw}", "%#{rhs_raw}", "%#{dest.name}" ]
                 # TODO: there might be something fucky about this
                 # raise
-                [ nil, lhs_type ]
+                [ dest.name, lhs_type ]
             end
         else
             raise "Unsupported operands for verb #{verb}: #{types}"
@@ -148,7 +160,7 @@ class StellerJ::Compiler
             tensor_store_values dest.name, values, dim, rhs_type
             # p [dim, values, reg]
             # exit
-            [ nil, rhs_type ]
+            [ dest.name, rhs_type ]
         else
             raise "TODO: dynamic shape $"
         end
@@ -209,6 +221,7 @@ class StellerJ::Compiler
         when StellerJ::LLVMEmitter::JITensor
             values = value.split
             dim = [ values.size ]
+            p ["Attempting to store", name, values, dim, dtype]
             tensor_store_values name, values, dim, dtype
         # when StellerJ::LLVMEmitter::JFTensor
         #     values = value.split
@@ -229,9 +242,11 @@ class StellerJ::Compiler
                 p ["left",node.left, "right",node.right]
                 # we need temporaries for each side
                 # exit
-                lhs = value_for_operand node.left
-                rhs = value_for_operand node.right
+                lhs = value_for_operand node.left, dest
+                rhs = value_for_operand node.right, dest
                 
+                p ["DEST??", dest]
+                # exit 0
                 result_reg, dtype = compile_verb raw, [ lhs, rhs ], dest
                 
                 if dest.nil?
@@ -246,16 +261,22 @@ class StellerJ::Compiler
                     raise "Incompatible type: store #{dtype} into #{dest.dtype}" if dest.dtype != dtype
                     # store doesn't update active register count, so we return a nil register
                     # p ["store", dest.name, result_reg, dtype]
-                    unless dest.initialized
+                    if result_reg != dest.name
                         store dest.name, result_reg, dtype
-                        raise "variable was not initialized by store call" unless dest.initialized
-                        [ nil, dtype ]
-                    else
-                        puts "Hey, already initialized"
-                        @last_assigned = dest.name
-                        # [ dest.name, dtype ]
-                        [ nil, dtype ]
                     end
+                    @last_assigned = dest.name
+                    [ dest.name, dtype ]
+                    # unless dest.initialized
+                    #     store dest.name, result_reg, dtype
+                    #     raise "variable was not initialized by store call" unless dest.initialized
+                    #     p [dest.name, "OWO"]
+                    #     [ dest.name, dtype ]
+                    # else
+                    #     puts "Hey, already initialized"
+                    #     @last_assigned = dest.name
+                    #     # [ dest.name, dtype ]
+                    #     [ dest.name, dtype ]
+                    # end
                 end
             end
         
@@ -282,6 +303,12 @@ class StellerJ::Compiler
             raise "unknown head type #{node.value}"
         end
     end
+
+    def copy(src, dest)
+        @last_assigned = dest.name
+        @emitter.comment "TODO: copy #{src.name} to #{dest.name}"
+        @emitter.call "JITensor_copy_value", [ "%#{src.name}", "%#{dest.name}" ]
+    end
     
     def compile_node(node)
         puts "Compiling: "
@@ -304,12 +331,22 @@ class StellerJ::Compiler
             else
                 variable = @variables[name]
             end
-            
+
             # get value
             rhs = node.right
             if rhs.speech == :noun
-                compile_value rhs, variable
-                @emitter.notify_type variable.name, variable.dtype
+                if rhs.can_find? { |value| Array === value && value[1] == :word && value[0] == name }
+                    tmp = variable.to_named_temp
+                    if @variables[tmp.name].nil?
+                        @variables[tmp.name] = tmp
+                        @emitter.alloca tmp.name, tmp.dtype
+                    end
+                    compile_value rhs, tmp
+                    copy tmp, variable
+                else
+                    compile_value rhs, variable
+                    @emitter.notify_type variable.name, variable.dtype
+                end
             else
                 #TODO:
                 raise "TODO: non-noun copula assignment"

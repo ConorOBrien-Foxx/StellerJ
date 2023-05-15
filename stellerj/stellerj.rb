@@ -48,7 +48,8 @@ z =: (x * x) + y
 code = "
 x =: 1 2 3 4 5 6 7 8
 y =: 3 0 5 0 7 0 9 0
-z =: x + y
+z =: x + y + y
+z =: z + z + z + z + z
 "
 
 tokens = StellerJ.tokenize(code)
