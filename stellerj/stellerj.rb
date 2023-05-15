@@ -1,8 +1,10 @@
 module StellerJ
     Copula = %w(=. =:)
     Verbs = %w(+ - % * i. ? $)
-    Adverbs = %w(/ ~)
-    Conjunctions = %w(@ & . ")
+    # TODO: change back to %w arrays for nice style
+    # VSCode doesn't like %w with / or " in it :/
+    Adverbs = %w(~) + ["/"]
+    Conjunctions = %w(@ & .) + ['"']
     Control = %w(
         for. do. end. if. else.
         op. conj. adj.
