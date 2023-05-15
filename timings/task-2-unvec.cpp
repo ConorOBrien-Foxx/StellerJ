@@ -1,8 +1,8 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
-#include "portable-attributes.h"
-#include "timing.h"
+#include "portable-attributes.hpp"
+#include "timing.hpp"
 
 // make options: -O3 -g -Wall
 
@@ -23,14 +23,14 @@
 #define SEED (0)
 #endif
 
-const int rows = ROWS;
-const int cols = COLS;
+const size_t rows = ROWS;
+const size_t cols = COLS;
 
-NOINLINE void do_matrix_product(float** A, float** B, float** C) {
-    for(int i = 0; i < rows; ++i) {
-        for(int j = 0; j < rows; ++j) {
+NOINLINE void do_matrix_product(int64_t** A, int64_t** B, int64_t** C) {
+    for(size_t i = 0; i < rows; ++i) {
+        for(size_t j = 0; j < rows; ++j) {
             C[i][j] = 0;
-            for(int k = 0; k < cols; ++k) {
+            for(size_t k = 0; k < cols; ++k) {
                 C[i][j] += A[i][k] * B[k][j];
             }
         }
@@ -39,15 +39,15 @@ NOINLINE void do_matrix_product(float** A, float** B, float** C) {
 
 int main() {
     // Allocate memory for matrices A, B, and C
-    float** A = new float*[rows];
-    float** B = new float*[cols];
-    float** C = new float*[rows];
-    for(int i = 0; i < rows; ++i) {
-        A[i] = new float[cols];
-        C[i] = new float[rows];
+    int64_t** A = new int64_t*[rows];
+    int64_t** B = new int64_t*[cols];
+    int64_t** C = new int64_t*[rows];
+    for(size_t i = 0; i < rows; ++i) {
+        A[i] = new int64_t[cols];
+        C[i] = new int64_t[rows];
     }
-    for(int i = 0; i < cols; ++i) {
-        B[i] = new float[rows];
+    for(size_t i = 0; i < cols; ++i) {
+        B[i] = new int64_t[rows];
     }
 
     srand(SEED); // Seed the random number generator
@@ -55,13 +55,13 @@ int main() {
         // progress information
         std::cerr << (n + 1) << '/' << NTRIALS << '\r' << std::flush;
         // Initialize matrices A and B with random values
-        for(int i = 0; i < rows; ++i) {
-            for(int j = 0; j < cols; ++j) {
+        for(size_t i = 0; i < rows; ++i) {
+            for(size_t j = 0; j < cols; ++j) {
                 A[i][j] = rand() % 10; // Generate a random number between 0 and 9
             }
         }
-        for(int i = 0; i < cols; ++i) {
-            for(int j = 0; j < rows; ++j) {
+        for(size_t i = 0; i < cols; ++i) {
+            for(size_t j = 0; j < rows; ++j) {
                 B[i][j] = rand() % 10;
             }
         }

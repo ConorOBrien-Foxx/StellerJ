@@ -2,10 +2,10 @@
 #include <cstdlib>
 #include <ctime>
 #include <immintrin.h> /* for SIMD intrinsics */
-#include "portable-attributes.h"
-#include "timing.h"
+#include "portable-attributes.hpp"
+#include "timing.hpp"
 
-// make options: -O3 -g -Wall
+// make options: -O3 -g -Wall -march=native
 
 #ifndef ROWS
 #define ROWS (1024)
@@ -27,33 +27,35 @@
 const int rows = ROWS;
 const int cols = COLS;
 
-NOINLINE void do_matrix_product(float** A, float** B, float** C) {
+const size_t SIMD_SIZE = sizeof(__m256i) / sizeof(int64_t);
+NOINLINE void do_matrix_product(int64_t** A, int64_t** B, int64_t** C) {
     for(int i = 0; i < rows; ++i) {
-        for(int j = 0; j < rows; j += 8) {
-            __m256 sum = _mm256_setzero_ps();
+        for(int j = 0; j < rows; j += SIMD_SIZE) {
+            __m256i sum = _mm256_setzero_si256();
 
             for(int k = 0; k < cols; ++k) {
-                __m256 a = _mm256_broadcast_ss(&A[i][k]);
-                __m256 b = _mm256_loadu_ps(&B[k][j]);
-                sum = _mm256_add_ps(sum, _mm256_mul_ps(a, b));
+                __m256i a = _mm256_set1_epi64x(A[i][k]);
+                __m256i b = _mm256_loadu_si256((__m256i*) &B[k][j]);
+                // multiply_256i_pairwise(a, b, b); // store product in the b temporary
+                sum = _mm256_add_epi64(sum, _mm256_mul_epi32(a, b));
             }
 
-            _mm256_storeu_ps(&C[i][j], sum);
+            _mm256_storeu_si256((__m256i*) &C[i][j], sum);
         }
     }
 }
 
 int main() {
     // Allocate memory for matrices A, B, and C
-    float** A = new float*[rows];
-    float** B = new float*[cols];
-    float** C = new float*[rows];
-    for(int i = 0; i < rows; ++i) {
-        A[i] = new float[cols];
-        C[i] = new float[rows];
+    int64_t** A = new int64_t*[rows];
+    int64_t** B = new int64_t*[cols];
+    int64_t** C = new int64_t*[rows];
+    for(size_t i = 0; i < rows; ++i) {
+        A[i] = new int64_t[cols];
+        C[i] = new int64_t[rows];
     }
-    for(int i = 0; i < cols; ++i) {
-        B[i] = new float[rows];
+    for(size_t i = 0; i < cols; ++i) {
+        B[i] = new int64_t[rows];
     }
 
     srand(SEED); // Seed the random number generator
@@ -61,8 +63,8 @@ int main() {
         // progress information
         std::cerr << (n + 1) << '/' << NTRIALS << '\r' << std::flush;
         // Initialize matrices A and B with random values
-        for(int i = 0; i < rows; ++i) {
-            for(int j = 0; j < cols; ++j) {
+        for(size_t i = 0; i < rows; ++i) {
+            for(size_t j = 0; j < cols; ++j) {
                 A[i][j] = rand() % 10; // Generate a random number between 0 and 9
             }
         }

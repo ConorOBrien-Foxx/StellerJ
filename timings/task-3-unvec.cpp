@@ -1,8 +1,8 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
-#include "portable-attributes.h"
-#include "timing.h"
+#include "portable-attributes.hpp"
+#include "timing.hpp"
 
 #ifndef DIM_I
 #define DIM_I (70)

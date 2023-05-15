@@ -2,8 +2,8 @@
 #include <cstdlib>
 #include <ctime>
 #include <immintrin.h> /* for SIMD intrinsics */
-#include "portable-attributes.h"
-#include "timing.h"
+#include "portable-attributes.hpp"
+#include "timing.hpp"
 
 #ifndef DIM_I
 #define DIM_I (70)
@@ -30,16 +30,16 @@
 #define SEED (0)
 #endif
 
-const int I = DIM_I, J = DIM_J, K = DIM_K, L = DIM_L;
-const int SIMD_WIDTH = 8;
+const size_t I = DIM_I, J = DIM_J, K = DIM_K, L = DIM_L;
 
+const size_t SIMD_SIZE = sizeof(__m256i) / sizeof(int64_t);
 template <typename T>
 NOINLINE void do_vectorized_product(T A, T B, T C) {
-    for(int i = 0; i < I; i++) {
-        for(int j = 0; j < J; j++) {
-            for(int k = 0; k < K; k++) {
-                int l;
-                for(l = 0; l < L; l += SIMD_WIDTH) {
+    for(size_t i = 0; i < I; i++) {
+        for(size_t j = 0; j < J; j++) {
+            for(size_t k = 0; k < K; k++) {
+                size_t l;
+                for(l = 0; l < L; l += SIMD_SIZE) {
                     __m256i a = _mm256_loadu_si256((__m256i*)(&A[i][j][k][l]));
                     __m256i b = _mm256_loadu_si256((__m256i*)(&B[i][j][k][l]));
                     __m256i c = _mm256_mullo_epi32(a, b);
@@ -56,16 +56,16 @@ NOINLINE void do_vectorized_product(T A, T B, T C) {
 int main() {
     srand(SEED);
     
-    int* A[I][J][K];
-    int* B[I][J][K];
-    int* C[I][J][K];
-    for(int i = 0; i < I; i++) {
-        for(int j = 0; j < J; j++) {
-            for(int k = 0; k < K; k++) {
-                A[i][j][k] = new int[L];
-                B[i][j][k] = new int[L];
-                C[i][j][k] = new int[L];
-                for(int l = 0; l < L; l++) {
+    int64_t* A[I][J][K];
+    int64_t* B[I][J][K];
+    int64_t* C[I][J][K];
+    for(size_t i = 0; i < I; i++) {
+        for(size_t j = 0; j < J; j++) {
+            for(size_t k = 0; k < K; k++) {
+                A[i][j][k] = new int64_t[L];
+                B[i][j][k] = new int64_t[L];
+                C[i][j][k] = new int64_t[L];
+                for(size_t l = 0; l < L; l++) {
                     A[i][j][k][l] = rand() % 100;
                     B[i][j][k][l] = rand() % 100;
                 }
@@ -78,10 +78,10 @@ int main() {
         // progress information
         std::cerr << (n + 1) << '/' << NTRIALS << '\r' << std::flush;
         // Initialize matrices A and B with random values
-        for(int i = 0; i < I; i++) {
-            for(int j = 0; j < J; j++) {
-                for(int k = 0; k < K; k++) {
-                    for(int l = 0; l < L; l++) {
+        for(size_t i = 0; i < I; i++) {
+            for(size_t j = 0; j < J; j++) {
+                for(size_t k = 0; k < K; k++) {
+                    for(size_t l = 0; l < L; l++) {
                         A[i][j][k][l] = rand() % 100;
                         B[i][j][k][l] = rand() % 100;
                     }
