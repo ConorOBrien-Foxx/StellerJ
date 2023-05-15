@@ -3,15 +3,15 @@
 class StellerJ::LLVMEmitter
     TENSOR_SIZE = 32 # 4 fields x 8 bytes
     IType = "i64"
-    FType = "double"
+    # FType = "double"
     Void = "void"
     JITensor = "%JITensor"
-    JFTensor = "%JFTensor"
+    # JFTensor = "%JFTensor"
     TypeSize = {
         IType => 4,
-        FType => 8,
+        # FType => 8,
         Void => 0,
-        JFTensor => 8,
+        # JFTensor => 8,
         JITensor => 8,
         # JITensor => :dont_specify,
         # JFTensor => :dont_specify,
@@ -28,9 +28,9 @@ class StellerJ::LLVMEmitter
     def ITypeN(n)
         "[#{n} x #{IType}]"
     end
-    def FTypeN(n)
-        "[#{n} x #{FType}]"
-    end
+    # def FTypeN(n)
+        # "[#{n} x #{FType}]"
+    # end
     
     def initialize
         @functions = {}
@@ -52,14 +52,14 @@ class StellerJ::LLVMEmitter
             return: Void,
             args: ["#{JITensor}*", "#{JITensor}*", "#{JITensor}*"],
         }
-        @function_data["putd"] = {
-            return: Void,
-            args: [FType],
-        }
-        @function_data["JFTensor_dump"] = {
-            return: Void,
-            args: ["#{JFTensor}*"],
-        }
+        # @function_data["putd"] = {
+        #     return: Void,
+        #     args: [FType],
+        # }
+        # @function_data["JFTensor_dump"] = {
+        #     return: Void,
+        #     args: ["#{JFTensor}*"],
+        # }
         @registers = {
             "main" => 1
         }
@@ -133,8 +133,8 @@ class StellerJ::LLVMEmitter
     
     def tensor_atom_type(type)
         case type
-        when JFTensor
-            FType
+        # when JFTensor
+        #     FType
         when JITensor
             IType
         else

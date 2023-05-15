@@ -22,13 +22,13 @@ class StellerJ::Compiler
         if data.include? " "
             entries = data.split
             types = entries.map { |entry| type_for_data entry }
-            if types.include? StellerJ::LLVMEmitter::FType
-                StellerJ::LLVMEmitter::JFTensor
-            else
+            # if types.include? StellerJ::LLVMEmitter::FType
+                # StellerJ::LLVMEmitter::JFTensor
+            # else
                 StellerJ::LLVMEmitter::JITensor
-            end
-        elsif data.include? "."
-            StellerJ::LLVMEmitter::FType
+            # end
+        # elsif data.include? "."
+            # StellerJ::LLVMEmitter::FType
         else
             StellerJ::LLVMEmitter::IType
         end
@@ -84,18 +84,18 @@ class StellerJ::Compiler
             }[verb]
             reg = @emitter.primitive prim_name, lhs_type, [ lhs_reg, rhs_reg ]
             [ reg, lhs_type ]
-        when [ StellerJ::LLVMEmitter::FType, StellerJ::LLVMEmitter::FType ]
-            p ["loading", lhs, rhs]
-            lhs_reg = to_temporary lhs_raw, lhs_type
-            rhs_reg = to_temporary rhs_raw, rhs_type
-            prim_name = {
-                "+" => "fadd",
-                "-" => "fsub",
-                "*" => "fmul",
-                "%" => "fdiv",
-            }[verb]
-            reg = @emitter.primitive prim_name, lhs_type, [ lhs_reg, rhs_reg ]
-            [ reg, lhs_type ]
+        # when [ StellerJ::LLVMEmitter::FType, StellerJ::LLVMEmitter::FType ]
+        #     p ["loading", lhs, rhs]
+        #     lhs_reg = to_temporary lhs_raw, lhs_type
+        #     rhs_reg = to_temporary rhs_raw, rhs_type
+        #     prim_name = {
+        #         "+" => "fadd",
+        #         "-" => "fsub",
+        #         "*" => "fmul",
+        #         "%" => "fdiv",
+        #     }[verb]
+        #     reg = @emitter.primitive prim_name, lhs_type, [ lhs_reg, rhs_reg ]
+        #     [ reg, lhs_type ]
         # TODO: mixed conversion?
         # TODO: unary operations
         when [ StellerJ::LLVMEmitter::JITensor, StellerJ::LLVMEmitter::JITensor ]
@@ -133,7 +133,7 @@ class StellerJ::Compiler
         # TODO: scalar dimension case e.g. 3 $ 1
         
         # static case
-        raise "cannot have non-integral dimensions" if lhs_type == StellerJ::LLVMEmitter::JFTensor
+        # raise "cannot have non-integral dimensions" if lhs_type == StellerJ::LLVMEmitter::JFTensor
         if !dest.nil? && /[0-9_]/ === lhs_raw[0] && /[0-9_]/ === rhs_raw[0]
             dim = lhs_raw.split.map &:to_i
             total_elements = dim.inject(:*)
@@ -178,16 +178,16 @@ class StellerJ::Compiler
         else
             # copy into J*Tensor
             p [name, values, dim, dtype]
-            raise "TODO: copy values into a JFTensor"
+            raise "TODO: copy values into a J*Tensor"
         end
         
         # p ["GIVEN VALUES", values]
-        if dtype == StellerJ::LLVMEmitter::JFTensor
-            values.map! { |value|
-                # make sure floats are properly floating point
-                value.include?(".") ? value : "#{value}.0"
-            }
-        end
+        # if dtype == StellerJ::LLVMEmitter::JFTensor
+        #     values.map! { |value|
+        #         # make sure floats are properly floating point
+        #         value.include?(".") ? value : "#{value}.0"
+        #     }
+        # end
         
         values.each.with_index { |value, idx|
             @emitter.comment "storing value in tensor, #{value} at #{idx}"
@@ -203,16 +203,17 @@ class StellerJ::Compiler
         @last_assigned = name
         raise "Trying to store nil value into #{name} (#{dtype})" if value.nil?
         case dtype
-        when StellerJ::LLVMEmitter::IType, StellerJ::LLVMEmitter::FType
+        when StellerJ::LLVMEmitter::IType#, StellerJ::LLVMEmitter::FType
             @emitter.store name, value, dtype
             @variables[name].initialized = true
         when StellerJ::LLVMEmitter::JITensor
             values = value.split
             dim = [ values.size ]
             tensor_store_values name, values, dim, dtype
-        when StellerJ::LLVMEmitter::JFTensor
-            dim = [ values.size ]
-            tensor_store_values name, values, dim, dtype
+        # when StellerJ::LLVMEmitter::JFTensor
+        #     values = value.split
+        #     dim = [ values.size ]
+        #     tensor_store_values name, values, dim, dtype
         else
             raise "Unhandled store operation: #{dtype}"
         end
@@ -331,13 +332,13 @@ class StellerJ::Compiler
         when StellerJ::LLVMEmitter::IType
             reg = @emitter.load to_print.name, to_print.dtype
             @emitter.call "putn", [ reg ]
-        when StellerJ::LLVMEmitter::FType
-            reg = @emitter.load to_print.name, to_print.dtype
-            @emitter.call "putd", [ reg ]
+        # when StellerJ::LLVMEmitter::FType
+        #     reg = @emitter.load to_print.name, to_print.dtype
+        #     @emitter.call "putd", [ reg ]
         when StellerJ::LLVMEmitter::JITensor
             @emitter.call "JITensor_dump", [ "%#{to_print.name}" ]
-        when StellerJ::LLVMEmitter::JFTensor
-            @emitter.call "JFTensor_dump", [ "%#{to_print.name}" ]
+        # when StellerJ::LLVMEmitter::JFTensor
+        #     @emitter.call "JFTensor_dump", [ "%#{to_print.name}" ]
         else
             raise "Cannot print datatype #{to_print.dtype}"
         end
