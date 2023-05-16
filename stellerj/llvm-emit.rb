@@ -5,6 +5,8 @@ class StellerJ::LLVMEmitter
     IType = "i64"
     # FType = "double"
     Void = "void"
+    IDyad = "i64 (i64, i64)*"
+    IMonad = "i64 (i64)*"
     JITensor = "%JITensor"
     # JFTensor = "%JFTensor"
     TypeSize = {
@@ -64,6 +66,10 @@ class StellerJ::LLVMEmitter
         @function_data["JITensor_div_vec_vec"] = {
             return: Void,
             args: ["#{JITensor}*", "#{JITensor}*", "#{JITensor}*"],
+        }
+        @function_data["JITensor_fold"] = {
+            return: IType,
+            args: ["#{JITensor}*", IDyad, IType ],
         }
         @function_data["JITensor_copy_shape"] = {
             return: Void,

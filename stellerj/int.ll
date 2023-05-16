@@ -26,6 +26,42 @@ define dso_local i64 @I64_add(i64 noundef %0, i64 noundef %1) #0 {
   ret i64 %7
 }
 
+; subtracts two integers
+define dso_local i64 @I64_sub(i64 noundef %0, i64 noundef %1) #0 {
+  %3 = alloca i64, align 8
+  %4 = alloca i64, align 8
+  store i64 %0, i64* %3, align 8
+  store i64 %1, i64* %4, align 8
+  %5 = load i64, i64* %3, align 8
+  %6 = load i64, i64* %4, align 8
+  %7 = sub nsw i64 %5, %6
+  ret i64 %7
+}
+
+; multiplies two integers
+define dso_local i64 @I64_mul(i64 noundef %0, i64 noundef %1) #0 {
+  %3 = alloca i64, align 8
+  %4 = alloca i64, align 8
+  store i64 %0, i64* %3, align 8
+  store i64 %1, i64* %4, align 8
+  %5 = load i64, i64* %3, align 8
+  %6 = load i64, i64* %4, align 8
+  %7 = mul nsw i64 %5, %6
+  ret i64 %7
+}
+
+; divides two integers
+define dso_local i64 @I64_div(i64 noundef %0, i64 noundef %1) #0 {
+  %3 = alloca i64, align 8
+  %4 = alloca i64, align 8
+  store i64 %0, i64* %3, align 8
+  store i64 %1, i64* %4, align 8
+  %5 = load i64, i64* %3, align 8
+  %6 = load i64, i64* %4, align 8
+  %7 = sdiv i64 %5, %6
+  ret i64 %7
+}
+
 ; fold a function with a given pointer
 define dso_local i64 @JITensor_fold(%JITensor* noundef %0, i64 (i64, i64)* noundef %1, i64 noundef %2) #0 {
   %4 = alloca i64, align 8
@@ -461,6 +497,7 @@ define dso_local void @JITensor_add_vec_vec(%JITensor* noundef %0, %JITensor* no
   ret void
 }
 
+; subtracts two vectors
 define dso_local void @JITensor_sub_vec_vec(%JITensor* noundef %0, %JITensor* noundef %1, %JITensor* noundef %2) #0 {
   %4 = alloca %JITensor*, align 8
   %5 = alloca %JITensor*, align 8
@@ -525,7 +562,7 @@ define dso_local void @JITensor_sub_vec_vec(%JITensor* noundef %0, %JITensor* no
   ret void
 }
 
-; Function Attrs: noinline nounwind optnone uwtable
+; multiplies two vectors
 define dso_local void @JITensor_mul_vec_vec(%JITensor* noundef %0, %JITensor* noundef %1, %JITensor* noundef %2) #0 {
   %4 = alloca %JITensor*, align 8
   %5 = alloca %JITensor*, align 8
@@ -590,7 +627,7 @@ define dso_local void @JITensor_mul_vec_vec(%JITensor* noundef %0, %JITensor* no
   ret void
 }
 
-; Function Attrs: noinline nounwind optnone uwtable
+; divides two vectors
 define dso_local void @JITensor_div_vec_vec(%JITensor* noundef %0, %JITensor* noundef %1, %JITensor* noundef %2) #0 {
   %4 = alloca %JITensor*, align 8
   %5 = alloca %JITensor*, align 8

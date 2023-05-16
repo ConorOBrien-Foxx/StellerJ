@@ -22,6 +22,18 @@ int64_t I64_add(int64_t lhs, int64_t rhs) {
     return lhs + rhs;
 }
 
+int64_t I64_sub(int64_t lhs, int64_t rhs) {
+    return lhs - rhs;
+}
+
+int64_t I64_mul(int64_t lhs, int64_t rhs) {
+    return lhs * rhs;
+}
+
+int64_t I64_div(int64_t lhs, int64_t rhs) {
+    return lhs / rhs;
+}
+
 int64_t JITensor_fold(struct JITensor* ptr, Dyad fn, int64_t seed) {
     // TODO: perform across columns?
     if(ptr->total == 0) {

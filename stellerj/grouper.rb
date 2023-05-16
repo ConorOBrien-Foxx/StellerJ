@@ -12,7 +12,7 @@ class StellerJ::Grouper
             case head
             when Array
                 raw, type = head[0]
-                self.new(raw)
+                self.new(raw, [])
             when TreeNode
                 case head.speech
                 when :conjunction
@@ -59,14 +59,41 @@ class StellerJ::Grouper
                 var_ctx[raw] = dtype
                 self.new(raw, [], dtype)
             when TreeNode
-                raw, type = head.value
                 children = [ node.left, node.right ].compact.map { |node|
                     self.from_tree_node node, var_ctx
                 }
-                # TODO: make informed decisions about dtype based on raw
-                dtype = children[0].dtype
-                var_ctx[raw] = dtype
-                self.new(raw, children, dtype)
+                new_head = Verb.from_tree_node head
+                # TODO: do better than hardcoding
+                dtype = if new_head.raw == "/"
+                    StellerJ::LLVMEmitter::IType
+                elsif new_head.raw == "$"
+                    StellerJ::LLVMEmitter::JITensor
+                else
+                    children[0].dtype
+                end
+                self.new(new_head, children, dtype)
+                # case head.value
+                # when Array
+                #     raw, type = head.value
+                #     children = [ node.left, node.right ].compact.map { |node|
+                #         self.from_tree_node node, var_ctx
+                #     }
+                #     # TODO: make informed decisions about dtype based on raw
+                #     dtype = children[0].dtype
+                #     self.new(new_head, children, dtype)
+
+                # when TreeNode
+                #     # adverb/conjunction
+                #     raw, type = head.value.value
+                #     case type
+                #     when :adverb
+                #         new_head = Verb.from_tree_node head
+                #         p new_head, node.left, node.right
+                #         exit
+                #         #raise
+                #     end
+                #     raise 'adverb/conjunction'
+                # end
             else
                 raise "Unexpected tree node head #{head.inspect}"
             end

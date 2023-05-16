@@ -59,10 +59,15 @@ result =: lhs + rhs
 
 code = "
 y =: 10 12 13 0 4 0 9
-y =: y * y + y
-echo y
-NB. z =: 3 4
-NB. z =: z + z
+NB. y =: y * y + y
+z =: +/ y
+echo z
+NB. echo z
+"
+
+code = "
+x =: 10 10  $  1 2 3
+echo x * x
 "
 
 tokens = StellerJ.tokenize(code)
