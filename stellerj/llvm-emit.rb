@@ -347,10 +347,11 @@ class StellerJ::LLVMEmitter
     end
     
     def compile
+        my_path = File.dirname(__FILE__)
         lines = [
-            *File.read("int.ll").lines.map(&:chomp),
+            *File.read(File.join(my_path, "int.ll")).lines.map(&:chomp),
             # *File.read("float.ll").lines.map(&:chomp),
-            *File.read("header.ll").lines.map(&:chomp),
+            *File.read(File.join(my_path, "header.ll")).lines.map(&:chomp),
         ]
         other_fns = @functions.keys - ["main"]
         other_fns.each { |fn|
