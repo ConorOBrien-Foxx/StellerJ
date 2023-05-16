@@ -926,4 +926,69 @@ define dso_local void @JITensor_div_vec_vec(%JITensor* noundef %0, %JITensor* no
   ret void
 }
 
-attributes #0 = { noinline nounwind optnone uwtable "frame-pointer"="all" "min-legal-vector-width"="0" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" }
+; i.
+define dso_local void @idot(i64 noundef %0, %JITensor* noundef %1) #0 {
+  %3 = alloca i64, align 8
+  %4 = alloca %JITensor*, align 8
+  %5 = alloca i64, align 8
+  store i64 %0, i64* %3, align 8
+  store %JITensor* %1, %JITensor** %4, align 8
+  %6 = load %JITensor*, %JITensor** %4, align 8
+  %7 = getelementptr inbounds %JITensor, %JITensor* %6, i32 0, i32 2
+  store i64 1, i64* %7, align 8
+  %8 = load %JITensor*, %JITensor** %4, align 8
+  %9 = getelementptr inbounds %JITensor, %JITensor* %8, i32 0, i32 2
+  %10 = load i64, i64* %9, align 8
+  %11 = mul i64 8, %10
+  %12 = call noalias i8* @malloc(i64 noundef %11) #4
+  %13 = bitcast i8* %12 to i64*
+  %14 = load %JITensor*, %JITensor** %4, align 8
+  %15 = getelementptr inbounds %JITensor, %JITensor* %14, i32 0, i32 1
+  store i64* %13, i64** %15, align 8
+  %16 = load i64, i64* %3, align 8
+  %17 = load %JITensor*, %JITensor** %4, align 8
+  %18 = getelementptr inbounds %JITensor, %JITensor* %17, i32 0, i32 1
+  %19 = load i64*, i64** %18, align 8
+  %20 = getelementptr inbounds i64, i64* %19, i64 0
+  store i64 %16, i64* %20, align 8
+  %21 = load i64, i64* %3, align 8
+  %22 = load %JITensor*, %JITensor** %4, align 8
+  %23 = getelementptr inbounds %JITensor, %JITensor* %22, i32 0, i32 3
+  store i64 %21, i64* %23, align 8
+  %24 = load %JITensor*, %JITensor** %4, align 8
+  %25 = getelementptr inbounds %JITensor, %JITensor* %24, i32 0, i32 3
+  %26 = load i64, i64* %25, align 8
+  %27 = mul i64 8, %26
+  %28 = call noalias i8* @malloc(i64 noundef %27) #4
+  %29 = bitcast i8* %28 to i64*
+  %30 = load %JITensor*, %JITensor** %4, align 8
+  %31 = getelementptr inbounds %JITensor, %JITensor* %30, i32 0, i32 0
+  store i64* %29, i64** %31, align 8
+  store i64 0, i64* %5, align 8
+  br label %32
+
+32:    
+  %33 = load i64, i64* %5, align 8
+  %34 = load i64, i64* %3, align 8
+  %35 = icmp slt i64 %33, %34
+  br i1 %35, label %36, label %46
+
+36:    
+  %37 = load i64, i64* %5, align 8
+  %38 = load %JITensor*, %JITensor** %4, align 8
+  %39 = getelementptr inbounds %JITensor, %JITensor* %38, i32 0, i32 0
+  %40 = load i64*, i64** %39, align 8
+  %41 = load i64, i64* %5, align 8
+  %42 = getelementptr inbounds i64, i64* %40, i64 %41
+  store i64 %37, i64* %42, align 8
+  br label %43
+
+43:    
+  %44 = load i64, i64* %5, align 8
+  %45 = add nsw i64 %44, 1
+  store i64 %45, i64* %5, align 8
+  br label %32    
+
+46:    
+  ret void
+}

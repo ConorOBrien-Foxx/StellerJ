@@ -1,3 +1,9 @@
-x =: 10 10 $ 1 2
-y =: 10 10 $ 3 4
-echo x +/ . * y
+A =: 1024 task2 512
+B =: 512 task2 1024
+time A +/ . * B
+A =: 1024 task2 512
+B =: 512 task2 1024
+time A +/ . * B
+A =: 1024 task2 512
+B =: 512 task2 1024
+time A +/ . * B

@@ -66,7 +66,7 @@ class StellerJ::Grouper
                 # TODO: do better than hardcoding
                 dtype = if new_head.raw == "/"
                     StellerJ::LLVMEmitter::IType
-                elsif new_head.raw == "$"
+                elsif new_head.raw == "$" || new_head.raw == "i." || new_head.raw.include?("task")
                     StellerJ::LLVMEmitter::JITensor
                 else
                     children[0].dtype
@@ -105,6 +105,8 @@ class StellerJ::Grouper
     VerbAssignment = Struct.new(:local, :variable, :expression)
     # TODO: abstract echo into its own proper function, and allow top-level expressions
     EchoStatement = Struct.new(:expression)
+    # TimeStatement = Struct.new(:repeat, :expression)
+    TimeStatement = Struct.new(:expression)
 
     def initialize(parsed)
         @nodes = parsed
@@ -155,6 +157,11 @@ class StellerJ::Grouper
                 lhs = Noun.from_tree_node node.left, @type_context
                 # @type_context[name] = ??
                 EchoStatement.new(lhs)
+            elsif raw == "time"
+                lhs = Noun.from_tree_node node.left, @type_context
+                TimeStatement.new(lhs)
+                # rhs = Noun.from_tree_node node.right, @type_context
+                # TimeStatement.new(lhs, rhs)
             else
                 raise "Unimplemented: Non-echo, top level expressions"
             end

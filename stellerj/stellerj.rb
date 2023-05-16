@@ -54,7 +54,7 @@ File.write "temp.ll", compiled
 
 unless Gem.win_platform?
     puts "Compiling..."
-    system "opt temp.ll -o temp.ll -S -O2 && llc temp.ll && gcc -no-pie temp.s -o temp.out"
+    system "opt temp.ll -o temp.ll -S -O3 && llc temp.ll && gcc -no-pie temp.s -o temp.out"
     if $?.exitstatus == 0
         # puts "Running..."
         # system "./temp.out"

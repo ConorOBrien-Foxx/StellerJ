@@ -1,0 +1,15 @@
+A =: task3 70 40 30 64
+B =: task3 70 40 30 64
+time A * B
+A =: task3 70 40 30 64
+B =: task3 70 40 30 64
+time A * B
+A =: task3 70 40 30 64
+B =: task3 70 40 30 64
+time A * B
+A =: task3 70 40 30 64
+B =: task3 70 40 30 64
+time A * B
+A =: task3 70 40 30 64
+B =: task3 70 40 30 64
+time A * B

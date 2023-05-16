@@ -129,6 +129,10 @@ class StellerJ::Parser
         @op_contexts = nil
         @semantic_context = {
             "echo" => :verb,
+            "time" => :verb,
+            "task1" => :verb,
+            "task2" => :verb,
+            "task3" => :verb,
         }
         @trees = []
     end

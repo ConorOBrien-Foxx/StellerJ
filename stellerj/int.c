@@ -171,34 +171,65 @@ void JITensor_div_vec_vec(struct JITensor* lhs, struct JITensor* rhs, struct JIT
     }
 }
 
-int main() {
-    struct JITensor a;
-    a.total = 12;
-    a.dimcount = 2;
-    a.dims = malloc(sizeof(*a.dims) * a.dimcount);
-    a.data = malloc(sizeof(*a.data) * a.total);
-    for(size_t i = 0; i < a.total; i++) {
-        a.data[i] = i + 1;
-    }
-    a.dims[0] = 3;
-    a.dims[1] = 4;
-    a.total = 12;
-    a.dimcount = 2;
-    
-    struct JITensor b;
-    b.total = 12;
-    b.dimcount = 2;
-    b.dims = malloc(sizeof(*b.dims) * b.dimcount);
-    b.data = malloc(sizeof(*b.data) * b.total);
-    for(size_t i = 0; i < b.total; i++) {
-        b.data[i] = i + 1;
-    }
-    b.dims[0] = 4;
-    b.dims[1] = 3;
+#include <time.h> /* for timespec, clock_gettime, etc */
+#ifndef SEED
+#define SEED (0)
+#endif
+#ifndef NTRIALS
+#define NTRIALS (3)
+#endif
 
-    struct JITensor out = { 0, 0, 0, 0 };
-    JITensor_inner_product(&a, &b, JITensor_sum, I64_mul, &out);
-    JITensor_dump(&a);
-    JITensor_dump(&b);
-    JITensor_dump(&out);
+/*
+struct JITensor {
+    int64_t* data;
+    uint64_t* dims;
+    uint64_t dimcount;
+    uint64_t total;
+};*/
+void task2(int64_t rows, int64_t cols, struct JITensor* out) {
+    out->dimcount = 2;
+    out->dims = malloc(sizeof(*out->dims) * out->dimcount);
+    out->dims[0] = rows;
+    out->dims[1] = cols;
+    out->total = rows * cols;
+    out->data = malloc(sizeof(*out->data) * out->total);
+    for(size_t i = 0; i < rows; ++i) {
+        for(size_t j = 0; j < cols; ++j) {
+            out->data[i * cols + j] = rand() % 10;
+        }
+    }
+}
+void task3(int64_t i, int64_t j, int64_t k, int64_t l, struct JITensor* out) {
+    out->dimcount = 4;
+    out->dims = malloc(sizeof(*out->dims) * out->dimcount);
+    out->dims[0] = i;
+    out->dims[1] = j;
+    out->dims[2] = k;
+    out->dims[3] = l;
+    out->total = i * j * k * l;
+    out->data = malloc(sizeof(*out->data) * out->total);
+    for(size_t i = 0; i < out->total; ++i) {
+        out->data[i] = rand() % 100;
+    }
+}
+
+static inline uint64_t ns_time() {
+    struct timespec t;
+    clock_gettime(CLOCK_REALTIME, &t);
+    return (uint64_t)(t.tv_sec*1000000000ll + t.tv_nsec);
+}
+
+void idot(int64_t max, struct JITensor* out) {
+    out->dimcount = 1;
+    out->dims = malloc(sizeof(*out->dims) * out->dimcount);
+    out->dims[0] = max;
+    out->total = max;
+    out->data = malloc(sizeof(*out->data) * out->total);
+    for(int64_t i = 0; i < max; ++i) {
+        out->data[i] = i;
+    }
+}
+int main() {
+    struct JITensor out;
+    task2(1024, 512, &out);
 }

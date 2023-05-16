@@ -80,19 +80,41 @@ class StellerJ::Compiler
     # only called at a top level
     def evaluate_verb(expression)
         verb = expression.raw
+        # p expression.children
         if verb.children.empty?
             # regular verb
-            case expression.dtype
+            case expression.children[0].dtype
             when StellerJ::LLVMEmitter::IType
-                child_regs = expression.children.map { |noun| compile_expression noun }
-                primitive_name = {
-                    "+" => "add",
-                    "-" => "sub",
-                    "*" => "mul",
-                    "%" => "sdiv",
-                }[verb.raw]
-                raise "Unhandled primitive verb #{verb.raw}" if primitive_name.nil?
-                @emitter.primitive primitive_name, expression.dtype, child_regs
+                case verb.raw
+                when "i."
+                    child_regs = expression.children.map { |noun| compile_expression noun }
+                    raise "incorrect arg count for i." if child_regs.size != 1
+                    out_reg = @emitter.next_register!
+                    @emitter.alloca out_reg, expression.dtype
+                    @emitter.clear_tensor out_reg, expression.dtype
+                    @emitter.call "idot", [ child_regs[0], out_reg ]
+                    out_reg
+
+                when "task2"
+                    child_regs = expression.children.map { |noun| compile_expression noun }
+                    out_reg = @emitter.next_register!
+                    @emitter.alloca out_reg, StellerJ::LLVMEmitter::JITensor
+                    @emitter.clear_tensor out_reg, StellerJ::LLVMEmitter::JITensor
+                    @emitter.call "task2", child_regs + [ out_reg ]
+                    out_reg
+                    out_reg
+
+                else
+                    child_regs = expression.children.map { |noun| compile_expression noun }
+                    primitive_name = {
+                        "+" => "add",
+                        "-" => "sub",
+                        "*" => "mul",
+                        "%" => "sdiv",
+                    }[verb.raw]
+                    raise "Unhandled primitive verb #{verb.raw}" if primitive_name.nil?
+                    @emitter.primitive primitive_name, expression.dtype, child_regs
+                end
             when StellerJ::LLVMEmitter::JITensor
                 case verb.raw
                 when "$"
@@ -111,6 +133,14 @@ class StellerJ::Compiler
                     else
                         raise "TODO: dynamic shape $"
                     end
+
+                when "task3"
+                    params = expression.children[0].raw.split
+                    out_reg = @emitter.next_register!
+                    @emitter.alloca out_reg, StellerJ::LLVMEmitter::JITensor
+                    @emitter.clear_tensor out_reg, StellerJ::LLVMEmitter::JITensor
+                    @emitter.call "task3", params + [ out_reg ]
+                    out_reg
 
                 else
                     child_regs = expression.children.map { |noun| compile_expression noun }
@@ -245,6 +275,34 @@ class StellerJ::Compiler
             else
                 raise "Unhandled dump of type #{group.dtype}"
             end
+        
+        when StellerJ::Grouper::TimeStatement
+            @emitter.comment "begin time statement"
+            start_reg = @emitter.next_register!
+            @emitter.alloca start_reg, StellerJ::LLVMEmitter::IType
+            end_reg = @emitter.next_register!
+            @emitter.alloca end_reg, StellerJ::LLVMEmitter::IType
+            diff_reg = @emitter.next_register!
+            @emitter.alloca diff_reg, "double"
+            start_val = @emitter.call "ns_time", []
+            @emitter.store start_reg, start_val, StellerJ::LLVMEmitter::IType
+            # actual computation
+            disregard = compile_expression group.expression
+            end_val = @emitter.call "ns_time", []
+            @emitter.store end_reg, end_val, StellerJ::LLVMEmitter::IType
+            lhs = @emitter.load end_reg, StellerJ::LLVMEmitter::IType
+            rhs = @emitter.load start_reg, StellerJ::LLVMEmitter::IType
+            diff = @emitter.primitive "sub", StellerJ::LLVMEmitter::IType, [ lhs, rhs ]
+            dp1 = @emitter.next_register!
+            @emitter.add_line @emitter.focus, "#{dp1} = uitofp i64 #{diff} to double"
+            dp2 = @emitter.primitive "fdiv", "double", [ dp1, "1.000000e+09" ]
+            @emitter.store diff_reg, dp2, "double"
+            dp3 = @emitter.load diff_reg, "double"
+            disregard2 = @emitter.next_register!
+            @emitter.add_line @emitter.focus,
+                "#{disregard2} = call i32 (i8*, ...) @printf(i8* noundef getelementptr inbounds ([4 x i8], [4 x i8]* @.outfmt, i64 0, i64 0), double noundef #{dp3})"
+
+            @emitter.comment "end time statement"
 
         else
             raise "Unhandled group type: #{group}"

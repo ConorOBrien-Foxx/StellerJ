@@ -11,8 +11,9 @@ class StellerJ::LLVMEmitter
     JITensor = "%JITensor"
     # JFTensor = "%JFTensor"
     TypeSize = {
-        IType => 4,
+        IType => 8,
         # FType => 8,
+        "double" => 8,
         Void => 0,
         # JFTensor => 8,
         JITensor => 8,
@@ -48,9 +49,25 @@ class StellerJ::LLVMEmitter
             return: Void,
             args: [IType],
         }
+        @function_data["ns_time"] = {
+            return: IType,
+            args: [],
+        }
         @function_data["JITensor_dump"] = {
             return: Void,
             args: ["#{JITensor}*"],
+        }
+        @function_data["idot"] = {
+            return: Void,
+            args: [IType, "#{JITensor}*"],
+        }
+        @function_data["task2"] = {
+            return: Void,
+            args: [IType, IType, "#{JITensor}*"],
+        }
+        @function_data["task3"] = {
+            return: Void,
+            args: [IType, IType, IType, IType, "#{JITensor}*"],
         }
         @function_data["JITensor_add_vec_vec"] = {
             return: Void,
