@@ -54,7 +54,7 @@ class StellerJ::Compiler
             @emitter.store loaded, "%arr", "#{StellerJ::LLVMEmitter::JITensor}*"
             next_reg = @emitter.load loaded, "#{StellerJ::LLVMEmitter::JITensor}*"
             result_reg = @emitter.call "JITensor_fold", [ next_reg, "@#{child_name}", "0" ]
-            #%4 = call i64 @JITensor_fold(%struct.JITensor* noundef %3, i64 (i64, i64)* noundef @I64_add, i64 noundef 0)
+            #%4 = call i64 @JITensor_fold(%struct.JITensor* %3, i64 (i64, i64)* @I64_add, i64 0)
             @emitter.add_line @emitter.focus, "ret #{StellerJ::LLVMEmitter::IType} #{result_reg}"
             @emitter.focus = old_focus
             name
@@ -173,7 +173,7 @@ class StellerJ::Compiler
                 @emitter.call "JITensor_inner_product", child_regs + names + [ out_reg ]
                 out_reg
             end
-            # %35 = call i64 @JITensor_fold(%struct.JITensor* noundef %2, i64 (i64, i64)* noundef @I64_add, i64 noundef 0)
+            # %35 = call i64 @JITensor_fold(%struct.JITensor* %2, i64 (i64, i64)* @I64_add, i64 0)
             # exit
             # raise 'todo: adverb/verb' 
         end
@@ -300,7 +300,7 @@ class StellerJ::Compiler
             dp3 = @emitter.load diff_reg, "double"
             disregard2 = @emitter.next_register!
             @emitter.add_line @emitter.focus,
-                "#{disregard2} = call i32 (i8*, ...) @printf(i8* noundef getelementptr inbounds ([4 x i8], [4 x i8]* @.outfmt, i64 0, i64 0), double noundef #{dp3})"
+                "#{disregard2} = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.outfmt, i64 0, i64 0), double #{dp3})"
 
             @emitter.comment "end time statement"
 

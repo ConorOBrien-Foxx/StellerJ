@@ -228,7 +228,7 @@ class StellerJ::LLVMEmitter
         add_line where, "#{data_ptr} = getelementptr inbounds #{type}, #{type}* #{name}, i32 0, i32 0"
         # call malloc with appropriate size
         ptr_malloc = next_register! where
-        add_line where, "#{ptr_malloc} = call noalias i8* @malloc(i64 noundef #{data_size})"
+        add_line where, "#{ptr_malloc} = call noalias i8* @malloc(i64 #{data_size})"
         # cast to correct type
         ptr_malloc_typed = next_register! where
         add_line where, "#{ptr_malloc_typed} = bitcast i8* #{ptr_malloc} to #{atom_type}*"
@@ -244,7 +244,7 @@ class StellerJ::LLVMEmitter
         add_line where, "#{dim_ptr} = getelementptr inbounds #{type}, #{type}* #{name}, i32 0, i32 1"
         # call malloc with appropriate size
         ptr_malloc = next_register! where
-        add_line where, "#{ptr_malloc} = call noalias i8* @malloc(i64 noundef #{dim_size})"
+        add_line where, "#{ptr_malloc} = call noalias i8* @malloc(i64 #{dim_size})"
         # cast to correct type
         ptr_malloc_typed = next_register! where
         add_line where, "#{ptr_malloc_typed} = bitcast i8* #{ptr_malloc} to #{IType}*"
