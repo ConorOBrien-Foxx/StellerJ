@@ -1,7 +1,7 @@
 ; included in a compiled file
 
 ; generates a matrix
-define dso_local void @task2(i64 noundef %0, i64 noundef %1, %JITensor* noundef %2) #0 {
+define dso_local void @task2(i64 %0, i64 %1, %JITensor* %2) #0 {
   %4 = alloca i64, align 8
   %5 = alloca i64, align 8
   %6 = alloca %JITensor*, align 8
@@ -17,7 +17,7 @@ define dso_local void @task2(i64 noundef %0, i64 noundef %1, %JITensor* noundef 
   %12 = getelementptr inbounds %JITensor, %JITensor* %11, i32 0, i32 2
   %13 = load i64, i64* %12, align 8
   %14 = mul i64 8, %13
-  %15 = call noalias i8* @malloc(i64 noundef %14) #4
+  %15 = call noalias i8* @malloc(i64 %14) #4
   %16 = bitcast i8* %15 to i64*
   %17 = load %JITensor*, %JITensor** %6, align 8
   %18 = getelementptr inbounds %JITensor, %JITensor* %17, i32 0, i32 1
@@ -44,7 +44,7 @@ define dso_local void @task2(i64 noundef %0, i64 noundef %1, %JITensor* noundef 
   %35 = getelementptr inbounds %JITensor, %JITensor* %34, i32 0, i32 3
   %36 = load i64, i64* %35, align 8
   %37 = mul i64 8, %36
-  %38 = call noalias i8* @malloc(i64 noundef %37) #4
+  %38 = call noalias i8* @malloc(i64 %37) #4
   %39 = bitcast i8* %38 to i64*
   %40 = load %JITensor*, %JITensor** %6, align 8
   %41 = getelementptr inbounds %JITensor, %JITensor* %40, i32 0, i32 0
@@ -103,7 +103,7 @@ define dso_local void @task2(i64 noundef %0, i64 noundef %1, %JITensor* noundef 
   ret void
 }
 
-define dso_local void @task3(i64 noundef %0, i64 noundef %1, i64 noundef %2, i64 noundef %3, %JITensor* noundef %4) #0 {
+define dso_local void @task3(i64 %0, i64 %1, i64 %2, i64 %3, %JITensor* %4) #0 {
   %6 = alloca i64, align 8
   %7 = alloca i64, align 8
   %8 = alloca i64, align 8
@@ -122,7 +122,7 @@ define dso_local void @task3(i64 noundef %0, i64 noundef %1, i64 noundef %2, i64
   %15 = getelementptr inbounds %JITensor, %JITensor* %14, i32 0, i32 2
   %16 = load i64, i64* %15, align 8
   %17 = mul i64 8, %16
-  %18 = call noalias i8* @malloc(i64 noundef %17) #4
+  %18 = call noalias i8* @malloc(i64 %17) #4
   %19 = bitcast i8* %18 to i64*
   %20 = load %JITensor*, %JITensor** %10, align 8
   %21 = getelementptr inbounds %JITensor, %JITensor* %20, i32 0, i32 1
@@ -165,7 +165,7 @@ define dso_local void @task3(i64 noundef %0, i64 noundef %1, i64 noundef %2, i64
   %52 = getelementptr inbounds %JITensor, %JITensor* %51, i32 0, i32 3
   %53 = load i64, i64* %52, align 8
   %54 = mul i64 8, %53
-  %55 = call noalias i8* @malloc(i64 noundef %54) #4
+  %55 = call noalias i8* @malloc(i64 %54) #4
   %56 = bitcast i8* %55 to i64*
   %57 = load %JITensor*, %JITensor** %10, align 8
   %58 = getelementptr inbounds %JITensor, %JITensor* %57, i32 0, i32 0
@@ -207,7 +207,7 @@ define dso_local void @task3(i64 noundef %0, i64 noundef %1, i64 noundef %2, i64
 %struct.timespec = type { i64, i64 }
 define internal i64 @ns_time() #0 {
   %1 = alloca %struct.timespec, align 8
-  %2 = call i32 @clock_gettime(i32 noundef 0, %struct.timespec* noundef %1) #3
+  %2 = call i32 @clock_gettime(i32 0, %struct.timespec* %1) #3
   %3 = getelementptr inbounds %struct.timespec, %struct.timespec* %1, i32 0, i32 0
   %4 = load i64, i64* %3, align 8
   %5 = mul nsw i64 %4, 1000000000
@@ -220,9 +220,9 @@ define internal i64 @ns_time() #0 {
 @.outfmt = private unnamed_addr constant [4 x i8] c"%g\0A\00", align 1
 
 declare i32 @rand() #1
-declare i32 @clock_gettime(i32 noundef, %struct.timespec* noundef) #2
-declare noalias i8* @malloc(i64 noundef)
-declare void @free(i8* noundef)
+declare i32 @clock_gettime(i32, %struct.timespec*) #2
+declare noalias i8* @malloc(i64)
+declare void @free(i8*)
 declare void @llvm.memset.p0i8.i64(i8* nocapture writeonly, i8, i64, i1 immarg)
 declare void @llvm.memcpy.p0i8.p0i8.i64(i8* noalias nocapture writeonly, i8* noalias nocapture readonly, i64, i1 immarg)
 declare i32 @printf(i8*, ...)

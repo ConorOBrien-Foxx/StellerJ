@@ -15,7 +15,7 @@ define dso_local void @putn(i64 %number) #0 {
 }
 
 ; add two integers
-define dso_local i64 @I64_add(i64 noundef %0, i64 noundef %1) #0 {
+define dso_local i64 @I64_add(i64 %0, i64 %1) #0 {
   %3 = alloca i64, align 8
   %4 = alloca i64, align 8
   store i64 %0, i64* %3, align 8
@@ -27,7 +27,7 @@ define dso_local i64 @I64_add(i64 noundef %0, i64 noundef %1) #0 {
 }
 
 ; subtracts two integers
-define dso_local i64 @I64_sub(i64 noundef %0, i64 noundef %1) #0 {
+define dso_local i64 @I64_sub(i64 %0, i64 %1) #0 {
   %3 = alloca i64, align 8
   %4 = alloca i64, align 8
   store i64 %0, i64* %3, align 8
@@ -39,7 +39,7 @@ define dso_local i64 @I64_sub(i64 noundef %0, i64 noundef %1) #0 {
 }
 
 ; multiplies two integers
-define dso_local i64 @I64_mul(i64 noundef %0, i64 noundef %1) #0 {
+define dso_local i64 @I64_mul(i64 %0, i64 %1) #0 {
   %3 = alloca i64, align 8
   %4 = alloca i64, align 8
   store i64 %0, i64* %3, align 8
@@ -51,7 +51,7 @@ define dso_local i64 @I64_mul(i64 noundef %0, i64 noundef %1) #0 {
 }
 
 ; divides two integers
-define dso_local i64 @I64_div(i64 noundef %0, i64 noundef %1) #0 {
+define dso_local i64 @I64_div(i64 %0, i64 %1) #0 {
   %3 = alloca i64, align 8
   %4 = alloca i64, align 8
   store i64 %0, i64* %3, align 8
@@ -63,7 +63,7 @@ define dso_local i64 @I64_div(i64 noundef %0, i64 noundef %1) #0 {
 }
 
 ; performs inner product with two input tensors, (tensor -> i64), (i64,i64 -> i64), and output tensor
-define dso_local void @JITensor_inner_product(%JITensor* noundef %0, %JITensor* noundef %1, i64 (%JITensor*)* noundef %2, i64 (i64, i64)* noundef %3, %JITensor* noundef %4) #0 {
+define dso_local void @JITensor_inner_product(%JITensor* %0, %JITensor* %1, i64 (%JITensor*)* %2, i64 (i64, i64)* %3, %JITensor* %4) #0 {
   %6 = alloca %JITensor*, align 8
   %7 = alloca %JITensor*, align 8
   %8 = alloca i64 (%JITensor*)*, align 8
@@ -143,7 +143,7 @@ define dso_local void @JITensor_inner_product(%JITensor* noundef %0, %JITensor* 
   %61 = getelementptr inbounds %JITensor, %JITensor* %60, i32 0, i32 2
   %62 = load i64, i64* %61, align 8
   %63 = mul i64 8, %62
-  %64 = call noalias i8* @malloc(i64 noundef %63) #5
+  %64 = call noalias i8* @malloc(i64 %63) #5
   %65 = bitcast i8* %64 to i64*
   %66 = load %JITensor*, %JITensor** %10, align 8
   %67 = getelementptr inbounds %JITensor, %JITensor* %66, i32 0, i32 1
@@ -170,7 +170,7 @@ define dso_local void @JITensor_inner_product(%JITensor* noundef %0, %JITensor* 
   %84 = getelementptr inbounds %JITensor, %JITensor* %83, i32 0, i32 3
   %85 = load i64, i64* %84, align 8
   %86 = mul i64 8, %85
-  %87 = call noalias i8* @malloc(i64 noundef %86) #5
+  %87 = call noalias i8* @malloc(i64 %86) #5
   %88 = bitcast i8* %87 to i64*
   %89 = load %JITensor*, %JITensor** %10, align 8
   %90 = getelementptr inbounds %JITensor, %JITensor* %89, i32 0, i32 0
@@ -183,7 +183,7 @@ define dso_local void @JITensor_inner_product(%JITensor* noundef %0, %JITensor* 
   %93 = getelementptr inbounds %JITensor, %JITensor* %14, i32 0, i32 2
   %94 = load i64, i64* %93, align 8
   %95 = mul i64 8, %94
-  %96 = call noalias i8* @malloc(i64 noundef %95) #5
+  %96 = call noalias i8* @malloc(i64 %95) #5
   %97 = bitcast i8* %96 to i64*
   %98 = getelementptr inbounds %JITensor, %JITensor* %14, i32 0, i32 1
   store i64* %97, i64** %98, align 8
@@ -193,7 +193,7 @@ define dso_local void @JITensor_inner_product(%JITensor* noundef %0, %JITensor* 
   %101 = getelementptr inbounds %JITensor, %JITensor* %14, i32 0, i32 3
   %102 = load i64, i64* %101, align 8
   %103 = mul i64 8, %102
-  %104 = call noalias i8* @malloc(i64 noundef %103) #5
+  %104 = call noalias i8* @malloc(i64 %103) #5
   %105 = bitcast i8* %104 to i64*
   %106 = getelementptr inbounds %JITensor, %JITensor* %14, i32 0, i32 0
   store i64* %105, i64** %106, align 8
@@ -248,7 +248,7 @@ define dso_local void @JITensor_inner_product(%JITensor* noundef %0, %JITensor* 
   %140 = add i64 %138, %139
   %141 = getelementptr inbounds i64, i64* %135, i64 %140
   %142 = load i64, i64* %141, align 8
-  %143 = call i64 %122(i64 noundef %132, i64 noundef %142)
+  %143 = call i64 %122(i64 %132, i64 %142)
   %144 = getelementptr inbounds %JITensor, %JITensor* %14, i32 0, i32 0
   %145 = load i64*, i64** %144, align 8
   %146 = load i64, i64* %17, align 8
@@ -264,7 +264,7 @@ define dso_local void @JITensor_inner_product(%JITensor* noundef %0, %JITensor* 
 
 151:
   %152 = load i64 (%JITensor*)*, i64 (%JITensor*)** %8, align 8
-  %153 = call i64 %152(%JITensor* noundef %14)
+  %153 = call i64 %152(%JITensor* %14)
   %154 = load %JITensor*, %JITensor** %10, align 8
   %155 = getelementptr inbounds %JITensor, %JITensor* %154, i32 0, i32 0
   %156 = load i64*, i64** %155, align 8
@@ -297,7 +297,7 @@ define dso_local void @JITensor_inner_product(%JITensor* noundef %0, %JITensor* 
 }
 
 ; fold a function with a given pointer
-define dso_local i64 @JITensor_fold(%JITensor* noundef %0, i64 (i64, i64)* noundef %1, i64 noundef %2) #0 {
+define dso_local i64 @JITensor_fold(%JITensor* %0, i64 (i64, i64)* %1, i64 %2) #0 {
   %4 = alloca i64, align 8
   %5 = alloca %JITensor*, align 8
   %6 = alloca i64 (i64, i64)*, align 8
@@ -353,7 +353,7 @@ define dso_local i64 @JITensor_fold(%JITensor* noundef %0, i64 (i64, i64)* nound
   %41 = load i64, i64* %8, align 8
   %42 = getelementptr inbounds i64, i64* %40, i64 %41
   %43 = load i64, i64* %42, align 8
-  %44 = call i64 %36(i64 noundef %37, i64 noundef %43)
+  %44 = call i64 %36(i64 %37, i64 %43)
   store i64 %44, i64* %9, align 8
   br label %45
 
@@ -374,7 +374,7 @@ define dso_local i64 @JITensor_fold(%JITensor* noundef %0, i64 (i64, i64)* nound
 }
 
 ; dump an integer tensor (modified from clang C++ code)
-define dso_local void @JITensor_dump(%JITensor* noundef %0) #0 {
+define dso_local void @JITensor_dump(%JITensor* %0) #0 {
   %2 = alloca %JITensor*, align 8
   %3 = alloca i64, align 8
   %4 = alloca i64, align 8
@@ -409,7 +409,7 @@ define dso_local void @JITensor_dump(%JITensor* noundef %0) #0 {
   %23 = load i64, i64* %6, align 8
   %24 = getelementptr inbounds i64, i64* %22, i64 %23
   %25 = load i64, i64* %24, align 8
-  %26 = call i32 (i8*, ...) @printf(i8* noundef getelementptr inbounds ([5 x i8], [5 x i8]* @.putn_fmt, i64 0, i64 0), i64 noundef %25)
+  %26 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.putn_fmt, i64 0, i64 0), i64 %25)
   store i64 1, i64* %3, align 8
   store i32 1, i32* %5, align 4
   %27 = load %JITensor*, %JITensor** %2, align 8
@@ -444,7 +444,7 @@ define dso_local void @JITensor_dump(%JITensor* noundef %0) #0 {
 
 49:
   store i32 0, i32* %5, align 4
-  %50 = call i32 @putchar(i32 noundef 10)
+  %50 = call i32 @putchar(i32 10)
   br label %51
 
 51:
@@ -462,7 +462,7 @@ define dso_local void @JITensor_dump(%JITensor* noundef %0) #0 {
   br i1 %57, label %58, label %60
 
 58:
-  %59 = call i32 @putchar(i32 noundef 32)
+  %59 = call i32 @putchar(i32 32)
   br label %60
 
 60:
@@ -480,7 +480,7 @@ define dso_local void @JITensor_dump(%JITensor* noundef %0) #0 {
 
 ; check if two tensors have the same dimensions
 ; returns 1 if true and 0 if false
-define dso_local i32 @JITensor_same_dim(%JITensor* noundef %0, %JITensor* noundef %1) #0 {
+define dso_local i32 @JITensor_same_dim(%JITensor* %0, %JITensor* %1) #0 {
   %3 = alloca i32, align 4
   %4 = alloca %JITensor*, align 8
   %5 = alloca %JITensor*, align 8
@@ -551,14 +551,14 @@ define dso_local i32 @JITensor_same_dim(%JITensor* noundef %0, %JITensor* nounde
 }
 
 ; prepares an output tensor by allocating memory
-define dso_local void @JITensor_copy_shape(%JITensor* noundef %0, %JITensor* noundef %1) #0 {
+define dso_local void @JITensor_copy_shape(%JITensor* %0, %JITensor* %1) #0 {
   %3 = alloca %JITensor*, align 8
   %4 = alloca %JITensor*, align 8
   store %JITensor* %0, %JITensor** %3, align 8
   store %JITensor* %1, %JITensor** %4, align 8
   %5 = load %JITensor*, %JITensor** %3, align 8
   %6 = load %JITensor*, %JITensor** %4, align 8
-  %7 = call i32 @JITensor_same_dim(%JITensor* noundef %5, %JITensor* noundef %6)
+  %7 = call i32 @JITensor_same_dim(%JITensor* %5, %JITensor* %6)
   %8 = icmp ne i32 %7, 0
   br i1 %8, label %68, label %9
 
@@ -574,7 +574,7 @@ define dso_local void @JITensor_copy_shape(%JITensor* noundef %0, %JITensor* nou
   %16 = getelementptr inbounds %JITensor, %JITensor* %15, i32 0, i32 0
   %17 = load i64*, i64** %16, align 8
   %18 = bitcast i64* %17 to i8*
-  call void @free(i8* noundef %18) #5
+  call void @free(i8* %18) #5
   br label %19
 
 19:
@@ -582,7 +582,7 @@ define dso_local void @JITensor_copy_shape(%JITensor* noundef %0, %JITensor* nou
   %21 = getelementptr inbounds %JITensor, %JITensor* %20, i32 0, i32 3
   %22 = load i64, i64* %21, align 8
   %23 = mul i64 8, %22
-  %24 = call noalias i8* @malloc(i64 noundef %23) #5
+  %24 = call noalias i8* @malloc(i64 %23) #5
   %25 = bitcast i8* %24 to i64*
   %26 = load %JITensor*, %JITensor** %4, align 8
   %27 = getelementptr inbounds %JITensor, %JITensor* %26, i32 0, i32 0
@@ -598,7 +598,7 @@ define dso_local void @JITensor_copy_shape(%JITensor* noundef %0, %JITensor* nou
   %34 = getelementptr inbounds %JITensor, %JITensor* %33, i32 0, i32 1
   %35 = load i64*, i64** %34, align 8
   %36 = bitcast i64* %35 to i8*
-  call void @free(i8* noundef %36) #5
+  call void @free(i8* %36) #5
   br label %37
 
 37:
@@ -606,7 +606,7 @@ define dso_local void @JITensor_copy_shape(%JITensor* noundef %0, %JITensor* nou
   %39 = getelementptr inbounds %JITensor, %JITensor* %38, i32 0, i32 2
   %40 = load i64, i64* %39, align 8
   %41 = mul i64 8, %40
-  %42 = call noalias i8* @malloc(i64 noundef %41) #5
+  %42 = call noalias i8* @malloc(i64 %41) #5
   %43 = bitcast i8* %42 to i64*
   %44 = load %JITensor*, %JITensor** %4, align 8
   %45 = getelementptr inbounds %JITensor, %JITensor* %44, i32 0, i32 1
@@ -642,14 +642,14 @@ define dso_local void @JITensor_copy_shape(%JITensor* noundef %0, %JITensor* nou
   ret void
 }
 
-define dso_local void @JITensor_copy_value(%JITensor* noundef %0, %JITensor* noundef %1) #0 {
+define dso_local void @JITensor_copy_value(%JITensor* %0, %JITensor* %1) #0 {
   %3 = alloca %JITensor*, align 8
   %4 = alloca %JITensor*, align 8
   store %JITensor* %0, %JITensor** %3, align 8
   store %JITensor* %1, %JITensor** %4, align 8
   %5 = load %JITensor*, %JITensor** %3, align 8
   %6 = load %JITensor*, %JITensor** %4, align 8
-  call void @JITensor_copy_shape(%JITensor* noundef %5, %JITensor* noundef %6)
+  call void @JITensor_copy_shape(%JITensor* %5, %JITensor* %6)
   %7 = load %JITensor*, %JITensor** %4, align 8
   %8 = getelementptr inbounds %JITensor, %JITensor* %7, i32 0, i32 0
   %9 = load i64*, i64** %8, align 8
@@ -667,7 +667,7 @@ define dso_local void @JITensor_copy_value(%JITensor* noundef %0, %JITensor* nou
 }
 
 ; adds two vectors and stores output in an output vector
-define dso_local void @JITensor_add_vec_vec(%JITensor* noundef %0, %JITensor* noundef %1, %JITensor* noundef %2) #0 {
+define dso_local void @JITensor_add_vec_vec(%JITensor* %0, %JITensor* %1, %JITensor* %2) #0 {
   %4 = alloca %JITensor*, align 8
   %5 = alloca %JITensor*, align 8
   %6 = alloca %JITensor*, align 8
@@ -677,7 +677,7 @@ define dso_local void @JITensor_add_vec_vec(%JITensor* noundef %0, %JITensor* no
   store %JITensor* %2, %JITensor** %6, align 8
   %8 = load %JITensor*, %JITensor** %4, align 8
   %9 = load %JITensor*, %JITensor** %5, align 8
-  %10 = call i32 @JITensor_same_dim(%JITensor* noundef %8, %JITensor* noundef %9)
+  %10 = call i32 @JITensor_same_dim(%JITensor* %8, %JITensor* %9)
   %11 = icmp ne i32 %10, 0
   br i1 %11, label %13, label %12
 
@@ -687,7 +687,7 @@ define dso_local void @JITensor_add_vec_vec(%JITensor* noundef %0, %JITensor* no
 13:
   %14 = load %JITensor*, %JITensor** %4, align 8
   %15 = load %JITensor*, %JITensor** %6, align 8
-  call void @JITensor_copy_shape(%JITensor* noundef %14, %JITensor* noundef %15)
+  call void @JITensor_copy_shape(%JITensor* %14, %JITensor* %15)
   store i64 0, i64* %7, align 8
   br label %16
 
@@ -732,7 +732,7 @@ define dso_local void @JITensor_add_vec_vec(%JITensor* noundef %0, %JITensor* no
 }
 
 ; subtracts two vectors
-define dso_local void @JITensor_sub_vec_vec(%JITensor* noundef %0, %JITensor* noundef %1, %JITensor* noundef %2) #0 {
+define dso_local void @JITensor_sub_vec_vec(%JITensor* %0, %JITensor* %1, %JITensor* %2) #0 {
   %4 = alloca %JITensor*, align 8
   %5 = alloca %JITensor*, align 8
   %6 = alloca %JITensor*, align 8
@@ -742,7 +742,7 @@ define dso_local void @JITensor_sub_vec_vec(%JITensor* noundef %0, %JITensor* no
   store %JITensor* %2, %JITensor** %6, align 8
   %8 = load %JITensor*, %JITensor** %4, align 8
   %9 = load %JITensor*, %JITensor** %5, align 8
-  %10 = call i32 @JITensor_same_dim(%JITensor* noundef %8, %JITensor* noundef %9)
+  %10 = call i32 @JITensor_same_dim(%JITensor* %8, %JITensor* %9)
   %11 = icmp ne i32 %10, 0
   br i1 %11, label %13, label %12
 
@@ -752,7 +752,7 @@ define dso_local void @JITensor_sub_vec_vec(%JITensor* noundef %0, %JITensor* no
 13:
   %14 = load %JITensor*, %JITensor** %4, align 8
   %15 = load %JITensor*, %JITensor** %6, align 8
-  call void @JITensor_copy_shape(%JITensor* noundef %14, %JITensor* noundef %15)
+  call void @JITensor_copy_shape(%JITensor* %14, %JITensor* %15)
   store i64 0, i64* %7, align 8
   br label %16
 
@@ -797,7 +797,7 @@ define dso_local void @JITensor_sub_vec_vec(%JITensor* noundef %0, %JITensor* no
 }
 
 ; multiplies two vectors
-define dso_local void @JITensor_mul_vec_vec(%JITensor* noundef %0, %JITensor* noundef %1, %JITensor* noundef %2) #0 {
+define dso_local void @JITensor_mul_vec_vec(%JITensor* %0, %JITensor* %1, %JITensor* %2) #0 {
   %4 = alloca %JITensor*, align 8
   %5 = alloca %JITensor*, align 8
   %6 = alloca %JITensor*, align 8
@@ -807,7 +807,7 @@ define dso_local void @JITensor_mul_vec_vec(%JITensor* noundef %0, %JITensor* no
   store %JITensor* %2, %JITensor** %6, align 8
   %8 = load %JITensor*, %JITensor** %4, align 8
   %9 = load %JITensor*, %JITensor** %5, align 8
-  %10 = call i32 @JITensor_same_dim(%JITensor* noundef %8, %JITensor* noundef %9)
+  %10 = call i32 @JITensor_same_dim(%JITensor* %8, %JITensor* %9)
   %11 = icmp ne i32 %10, 0
   br i1 %11, label %13, label %12
 
@@ -817,7 +817,7 @@ define dso_local void @JITensor_mul_vec_vec(%JITensor* noundef %0, %JITensor* no
 13:
   %14 = load %JITensor*, %JITensor** %4, align 8
   %15 = load %JITensor*, %JITensor** %6, align 8
-  call void @JITensor_copy_shape(%JITensor* noundef %14, %JITensor* noundef %15)
+  call void @JITensor_copy_shape(%JITensor* %14, %JITensor* %15)
   store i64 0, i64* %7, align 8
   br label %16
 
@@ -862,7 +862,7 @@ define dso_local void @JITensor_mul_vec_vec(%JITensor* noundef %0, %JITensor* no
 }
 
 ; divides two vectors
-define dso_local void @JITensor_div_vec_vec(%JITensor* noundef %0, %JITensor* noundef %1, %JITensor* noundef %2) #0 {
+define dso_local void @JITensor_div_vec_vec(%JITensor* %0, %JITensor* %1, %JITensor* %2) #0 {
   %4 = alloca %JITensor*, align 8
   %5 = alloca %JITensor*, align 8
   %6 = alloca %JITensor*, align 8
@@ -872,7 +872,7 @@ define dso_local void @JITensor_div_vec_vec(%JITensor* noundef %0, %JITensor* no
   store %JITensor* %2, %JITensor** %6, align 8
   %8 = load %JITensor*, %JITensor** %4, align 8
   %9 = load %JITensor*, %JITensor** %5, align 8
-  %10 = call i32 @JITensor_same_dim(%JITensor* noundef %8, %JITensor* noundef %9)
+  %10 = call i32 @JITensor_same_dim(%JITensor* %8, %JITensor* %9)
   %11 = icmp ne i32 %10, 0
   br i1 %11, label %13, label %12
 
@@ -882,7 +882,7 @@ define dso_local void @JITensor_div_vec_vec(%JITensor* noundef %0, %JITensor* no
 13:
   %14 = load %JITensor*, %JITensor** %4, align 8
   %15 = load %JITensor*, %JITensor** %6, align 8
-  call void @JITensor_copy_shape(%JITensor* noundef %14, %JITensor* noundef %15)
+  call void @JITensor_copy_shape(%JITensor* %14, %JITensor* %15)
   store i64 0, i64* %7, align 8
   br label %16
 
@@ -927,7 +927,7 @@ define dso_local void @JITensor_div_vec_vec(%JITensor* noundef %0, %JITensor* no
 }
 
 ; i.
-define dso_local void @idot(i64 noundef %0, %JITensor* noundef %1) #0 {
+define dso_local void @idot(i64 %0, %JITensor* %1) #0 {
   %3 = alloca i64, align 8
   %4 = alloca %JITensor*, align 8
   %5 = alloca i64, align 8
@@ -940,7 +940,7 @@ define dso_local void @idot(i64 noundef %0, %JITensor* noundef %1) #0 {
   %9 = getelementptr inbounds %JITensor, %JITensor* %8, i32 0, i32 2
   %10 = load i64, i64* %9, align 8
   %11 = mul i64 8, %10
-  %12 = call noalias i8* @malloc(i64 noundef %11) #4
+  %12 = call noalias i8* @malloc(i64 %11) #4
   %13 = bitcast i8* %12 to i64*
   %14 = load %JITensor*, %JITensor** %4, align 8
   %15 = getelementptr inbounds %JITensor, %JITensor* %14, i32 0, i32 1
@@ -959,7 +959,7 @@ define dso_local void @idot(i64 noundef %0, %JITensor* noundef %1) #0 {
   %25 = getelementptr inbounds %JITensor, %JITensor* %24, i32 0, i32 3
   %26 = load i64, i64* %25, align 8
   %27 = mul i64 8, %26
-  %28 = call noalias i8* @malloc(i64 noundef %27) #4
+  %28 = call noalias i8* @malloc(i64 %27) #4
   %29 = bitcast i8* %28 to i64*
   %30 = load %JITensor*, %JITensor** %4, align 8
   %31 = getelementptr inbounds %JITensor, %JITensor* %30, i32 0, i32 0
