@@ -3,7 +3,7 @@
 # is a class instead of a method for potential future complexity
 class StellerJ::Tokenizer
     @@ScanRegex = Regexp.new [
-        /'(?:''|[^'])+'/,               # string
+        /'(?:''|[^'])*'/,               # string
         /NB\.(?:[^.:].*)?(?:\n|$)/,     # comment
         /[A-Za-z][A-Za-z_0-9]*[.:]*/,   # word
         /\s+/,                          # spaces

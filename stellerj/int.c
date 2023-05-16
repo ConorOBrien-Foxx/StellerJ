@@ -18,6 +18,23 @@ struct JITensor {
 typedef int64_t (*Dyad)(int64_t lhs, int64_t rhs);
 typedef int64_t (*Monad)(int64_t arg);
 
+int64_t I64_add(int64_t lhs, int64_t rhs) {
+    return lhs + rhs;
+}
+
+int64_t JITensor_fold(struct JITensor* ptr, Dyad fn, int64_t seed) {
+    // TODO: perform across columns?
+    if(ptr->total == 0) {
+        return seed;
+    }
+    size_t idx = ptr->total - 1;
+    int64_t basis = ptr->data[idx];
+    for(--idx; idx < ptr->total; --idx) {
+        basis = fn(basis, ptr->data[idx]);
+    }
+    return basis;
+}
+
 void JITensor_dump(struct JITensor* ptr) {
     if(ptr->dimcount == 0) return;
     size_t total, j;
@@ -71,6 +88,18 @@ void JITensor_add_vec_vec(struct JITensor* lhs, struct JITensor* rhs, struct JIT
 }
 
 int main() {
+    struct JITensor numbers;
+    numbers.total = 12;
+    numbers.dimcount = 1;
+    numbers.dims = malloc(sizeof(*numbers.dims) * numbers.dimcount);
+    numbers.data = malloc(sizeof(*numbers.data) * numbers.total);
+    for(size_t i = 0; i < numbers.total; i++) {
+        numbers.data[i] = 30 ^ i;
+    }
+    JITensor_dump(&numbers);
+    int64_t sum = JITensor_fold(&numbers, &I64_add, 0);
+    printf("\nsum = %lld\n", sum);
+    /*
     struct JITensor a = { malloc(sizeof(uint64_t)*9), malloc(sizeof(uint64_t) * 2), 2 };
     for(int i = 0; i < 9; i++) a.data[i] = i + 1;
     a.dims[0] = 3; a.dims[1] = 3; a.dimcount = 2;
@@ -92,4 +121,5 @@ int main() {
     JITensor_copy_value(&out, &tmp);
     
     JITensor_dump(&tmp);
+    */
 }

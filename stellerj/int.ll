@@ -14,6 +14,95 @@ define dso_local void @putn(i64 %number) #0 {
     ret void
 }
 
+; add two integers
+define dso_local i64 @I64_add(i64 noundef %0, i64 noundef %1) #0 {
+  %3 = alloca i64, align 8
+  %4 = alloca i64, align 8
+  store i64 %0, i64* %3, align 8
+  store i64 %1, i64* %4, align 8
+  %5 = load i64, i64* %3, align 8
+  %6 = load i64, i64* %4, align 8
+  %7 = add nsw i64 %5, %6
+  ret i64 %7
+}
+
+; fold a function with a given pointer
+define dso_local i64 @JITensor_fold(%JITensor* noundef %0, i64 (i64, i64)* noundef %1, i64 noundef %2) #0 {
+  %4 = alloca i64, align 8
+  %5 = alloca %JITensor*, align 8
+  %6 = alloca i64 (i64, i64)*, align 8
+  %7 = alloca i64, align 8
+  %8 = alloca i64, align 8
+  %9 = alloca i64, align 8
+  store %JITensor* %0, %JITensor** %5, align 8
+  store i64 (i64, i64)* %1, i64 (i64, i64)** %6, align 8
+  store i64 %2, i64* %7, align 8
+  %10 = load %JITensor*, %JITensor** %5, align 8
+  %11 = getelementptr inbounds %JITensor, %JITensor* %10, i32 0, i32 3
+  %12 = load i64, i64* %11, align 8
+  %13 = icmp eq i64 %12, 0
+  br i1 %13, label %14, label %16
+
+14:
+  %15 = load i64, i64* %7, align 8
+  store i64 %15, i64* %4, align 8
+  br label %50
+
+16:
+  %17 = load %JITensor*, %JITensor** %5, align 8
+  %18 = getelementptr inbounds %JITensor, %JITensor* %17, i32 0, i32 3
+  %19 = load i64, i64* %18, align 8
+  %20 = sub i64 %19, 1
+  store i64 %20, i64* %8, align 8
+  %21 = load %JITensor*, %JITensor** %5, align 8
+  %22 = getelementptr inbounds %JITensor, %JITensor* %21, i32 0, i32 0
+  %23 = load i64*, i64** %22, align 8
+  %24 = load i64, i64* %8, align 8
+  %25 = getelementptr inbounds i64, i64* %23, i64 %24
+  %26 = load i64, i64* %25, align 8
+  store i64 %26, i64* %9, align 8
+  %27 = load i64, i64* %8, align 8
+  %28 = add i64 %27, -1
+  store i64 %28, i64* %8, align 8
+  br label %29
+
+29:
+  %30 = load i64, i64* %8, align 8
+  %31 = load %JITensor*, %JITensor** %5, align 8
+  %32 = getelementptr inbounds %JITensor, %JITensor* %31, i32 0, i32 3
+  %33 = load i64, i64* %32, align 8
+  %34 = icmp ult i64 %30, %33
+  br i1 %34, label %35, label %48
+
+35:
+  %36 = load i64 (i64, i64)*, i64 (i64, i64)** %6, align 8
+  %37 = load i64, i64* %9, align 8
+  %38 = load %JITensor*, %JITensor** %5, align 8
+  %39 = getelementptr inbounds %JITensor, %JITensor* %38, i32 0, i32 0
+  %40 = load i64*, i64** %39, align 8
+  %41 = load i64, i64* %8, align 8
+  %42 = getelementptr inbounds i64, i64* %40, i64 %41
+  %43 = load i64, i64* %42, align 8
+  %44 = call i64 %36(i64 noundef %37, i64 noundef %43)
+  store i64 %44, i64* %9, align 8
+  br label %45
+
+45:
+  %46 = load i64, i64* %8, align 8
+  %47 = add i64 %46, -1
+  store i64 %47, i64* %8, align 8
+  br label %29
+
+48:
+  %49 = load i64, i64* %9, align 8
+  store i64 %49, i64* %4, align 8
+  br label %50
+
+50:
+  %51 = load i64, i64* %4, align 8
+  ret i64 %51
+}
+
 ; dump an integer tensor (modified from clang C++ code)
 define dso_local void @JITensor_dump(%JITensor* noundef %0) #0 {
   %2 = alloca %JITensor*, align 8

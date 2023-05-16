@@ -15,6 +15,9 @@ module StellerJ
     
     # StellerJ::Parser
     require_relative './parse.rb'
+
+    # StellerJ::Grouper
+    require_relative './grouper.rb'
     
     # StellerJ::Compile
     require_relative './compile.rb'
@@ -28,6 +31,9 @@ module StellerJ
     end
     def self.parse(tokens)
         Parser::parse tokens
+    end
+    def self.group(tokens)
+        Grouper::group tokens
     end
     def self.compile(tokens)
         Compiler::compile tokens
@@ -46,18 +52,27 @@ z =: (x * x) + y
 ".strip
 
 code = "
-x =: 1 2 3 4 5 6 7 8
-y =: 3 0 5 0 7 0 9 0
-z =: x + y + y
-z =: z + z + z + z + z
+lhs =: 5
+rhs =: 9
+result =: lhs + rhs
+"
+
+code = "
+NB. add =: +
+y =: 9
+x =: y + 4
+echo x
+NB. z =: 3 4
+NB. z =: z + z
 "
 
 tokens = StellerJ.tokenize(code)
 parsed = StellerJ::parse(tokens)
-compiled = StellerJ::compile(parsed)
+grouped = StellerJ::group(parsed)
+compiled = StellerJ::compile(grouped)
 
-start = compiled.index "define dso_local i32 @main()"
-puts compiled[start..-1]
+start = compiled.index "declare i32 @putchar(i32)"
+puts compiled[start+25..-1]
 File.write "temp.ll", compiled
 
 unless Gem.win_platform?

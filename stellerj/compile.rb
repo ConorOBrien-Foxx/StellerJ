@@ -20,368 +20,93 @@ class StellerJ::Compiler
     }
 
     def initialize(parsed)
-        @trees = parsed
+        @groups = parsed
         @emitter = StellerJ::LLVMEmitter.new
         @variables = {}
+        @verbs = {}
+        @allocated = {}
         @last_assigned = nil
     end
-    
-    def type_for_data(data)
-        if data.include? " "
-            entries = data.split
-            types = entries.map { |entry| type_for_data entry }
-            # if types.include? StellerJ::LLVMEmitter::FType
-                # StellerJ::LLVMEmitter::JFTensor
-            # else
-                StellerJ::LLVMEmitter::JITensor
-            # end
-        # elsif data.include? "."
-            # StellerJ::LLVMEmitter::FType
-        else
-            StellerJ::LLVMEmitter::IType
-        end
-    end
-    
-    def value_for_operand(operand, dest)
-        case operand.speech
-        when :noun
-            if operand.leaf?
-                raw, type = operand.value
-                case type
-                when :data
-                    dtype = type_for_data raw
-                    [ raw, dtype ]
-                when :word
-                    variable = @variables[raw]
-                    # temp = @emitter.load variable.name, variable.dtype
-                    [ variable.name, variable.dtype ]
-                else
-                    raise "unimplemented: value for noun #{type}"
-                end
-            else
-                p ["Compiling operand", operand]
-                reg, dtype = compile_value operand, dest
-            end
-        else
-            raise "unimplemented: value for #{operand.speech}"
-        end
-    end
-    
-    def to_temporary(name, type)
-        if name[0] == '%'
-            name
-        else
-            @emitter.load name, type
-        end
-    end
-    
-    def handle_native_primitive(verb, lhs, rhs, dest)
-        lhs_raw, lhs_type = lhs
-        rhs_raw, rhs_type = rhs
-        types = [ lhs_type, rhs_type ].compact
-        case types
-        when [ StellerJ::LLVMEmitter::IType, StellerJ::LLVMEmitter::IType ]
-            # TODO: int, int -> float for division?
-            p ["loading", lhs, rhs]
-            lhs_reg = to_temporary lhs_raw, lhs_type
-            rhs_reg = to_temporary rhs_raw, rhs_type
-            prim_name = {
-                "+" => "add",
-                "-" => "sub",
-                "*" => "mul",
-                "%" => "sdiv",
-            }[verb]
-            reg = @emitter.primitive prim_name, lhs_type, [ lhs_reg, rhs_reg ]
-            [ reg, lhs_type ]
-        # when [ StellerJ::LLVMEmitter::FType, StellerJ::LLVMEmitter::FType ]
-        #     p ["loading", lhs, rhs]
-        #     lhs_reg = to_temporary lhs_raw, lhs_type
-        #     rhs_reg = to_temporary rhs_raw, rhs_type
-        #     prim_name = {
-        #         "+" => "fadd",
-        #         "-" => "fsub",
-        #         "*" => "fmul",
-        #         "%" => "fdiv",
-        #     }[verb]
-        #     reg = @emitter.primitive prim_name, lhs_type, [ lhs_reg, rhs_reg ]
-        #     [ reg, lhs_type ]
-        # TODO: mixed conversion?
-        # TODO: unary operations
-        when [ StellerJ::LLVMEmitter::JITensor, StellerJ::LLVMEmitter::JITensor ]
-            if dest.nil?
-                p [lhs, rhs, dest]
-                raise "TODO: anonymous operation"
-            else
-                method_name = {
-                    "+" => "JITensor_add_vec_vec",
-                }[verb]
-                raise "Unimplemented: #{verb} #{types}" if method_name.nil?
-                # reg = @emitter.primitive prim_name, lhs_type, [ lhs_raw, rhs_raw ]
-                # p ["HECK UWU", lhs, rhs, dest]
 
-                if !dest.initialized
-                    dest.initialized = true
-                    dest.dtype = lhs_type
-                    @emitter.clear_tensor dest.name, lhs_type
-                end
-                @emitter.call method_name, [ "%#{lhs_raw}", "%#{rhs_raw}", "%#{dest.name}" ]
-                # TODO: there might be something fucky about this
-                # raise
-                [ dest.name, lhs_type ]
-            end
-        else
-            raise "Unsupported operands for verb #{verb}: #{types}"
-        end
-    end
-    
-    def handle_shape(lhs, rhs, dest)
-        # TODO: constant value propagation
-        lhs_raw, lhs_type = lhs
-        rhs_raw, rhs_type = rhs
-        # raise "TODO: $"
-        # @emitter.comment "this is where shape handle goes"
-        # handle_native_primitive "+", ["1", "i64"], ["1", "i64"]
-        
-        # TODO: scalar dimension case e.g. 3 $ 1
-        
-        # static case
-        # raise "cannot have non-integral dimensions" if lhs_type == StellerJ::LLVMEmitter::JFTensor
-        if !dest.nil? && /[0-9_]/ === lhs_raw[0] && /[0-9_]/ === rhs_raw[0]
-            dim = lhs_raw.split.map &:to_i
-            total_elements = dim.inject(:*)
-            values = rhs_raw.split
-            if values.size < total_elements
-                values *= (total_elements.to_f / values.size).ceil
-            end
-            if values.size > total_elements
-                values = values[0...total_elements]
-            end
-            # @emitter.alloca dest.name, rhs_type
-            tensor_store_values dest.name, values, dim, rhs_type
-            # p [dim, values, reg]
-            # exit
-            [ dest.name, rhs_type ]
-        else
-            raise "TODO: dynamic shape $"
-        end
-    end
-    
-    def compile_verb(verb, params, dest)
-        lhs, rhs = params
-        
-        puts "LHS: #{lhs.inspect}"
-        puts "RHS: #{rhs.inspect}"
-        
-        case verb
-        when "$"
-            handle_shape lhs, rhs, dest
-        when "+", "-", "*", "%"
-            handle_native_primitive verb, lhs, rhs, dest
-        end
-    end
-    
-    def tensor_store_values(name, values, dim, dtype)
-        if @variables[name] && !@variables[name].initialized
-            # initialize J*Tensor
-            @variables[name].initialized = true
-            @variables[name].dtype = dtype
-            @variables[name].dim = dim unless @variables[name].nil?
-            @emitter.init_tensor name, dtype, dim
-        else
-            # copy into J*Tensor
-            p [name, values, dim, dtype]
-            raise "TODO: copy values into a J*Tensor"
-        end
-        
-        # p ["GIVEN VALUES", values]
-        # if dtype == StellerJ::LLVMEmitter::JFTensor
-        #     values.map! { |value|
-        #         # make sure floats are properly floating point
-        #         value.include?(".") ? value : "#{value}.0"
-        #     }
-        # end
-        
-        values.each.with_index { |value, idx|
-            @emitter.comment "storing value in tensor, #{value} at #{idx}"
-            @emitter.tensor_store name, dim, idx, value, dtype
-        }
-        
-        name
-    end
-    
-    # TODO: integer format static check
-    # returns a register type?
-    def store(name, value, dtype)
-        @last_assigned = name
-        raise "Trying to store nil value into #{name} (#{dtype})" if value.nil?
-        case dtype
-        when StellerJ::LLVMEmitter::IType#, StellerJ::LLVMEmitter::FType
-            @emitter.store name, value, dtype
-            @variables[name].initialized = true
-        when StellerJ::LLVMEmitter::JITensor
-            values = value.split
-            dim = [ values.size ]
-            p ["Attempting to store", name, values, dim, dtype]
-            tensor_store_values name, values, dim, dtype
-        # when StellerJ::LLVMEmitter::JFTensor
-        #     values = value.split
-        #     dim = [ values.size ]
-        #     tensor_store_values name, values, dim, dtype
-        else
-            raise "Unhandled store operation: #{dtype}"
-        end
-    end
-    
-    def compile_value(node, dest)
-        case node.value
-        when StellerJ::Parser::TreeNode
-            head = node.value
-            raw, type = head.value
-            case type
-            when :verb
-                p ["left",node.left, "right",node.right]
-                # we need temporaries for each side
-                # exit
-                lhs = value_for_operand node.left, dest
-                rhs = value_for_operand node.right, dest
-                
-                p ["DEST??", dest]
-                # exit 0
-                result_reg, dtype = compile_verb raw, [ lhs, rhs ], dest
-                
-                if dest.nil?
-                    # intermediate value stored in register
-                    [ result_reg, dtype ]
+    # returns a register value holding the final value
+    def compile_expression(expression)
+        case expression.children.size
+        when 0
+            # leaf node
+            p ["Compiling expression", expression]
+            case expression.dtype
+            when StellerJ::LLVMEmitter::IType
+                if /[0-9_]/ === expression.raw[0]
+                    @emitter.basic_constant expression.raw, expression.dtype
                 else
-                    p dest
-                    if !dest.initialized
-                        dest.dtype = dtype
-                    end
-                    raise "No dtype for #{dest}" if dest.dtype.nil?
-                    raise "Incompatible type: store #{dtype} into #{dest.dtype}" if dest.dtype != dtype
-                    # store doesn't update active register count, so we return a nil register
-                    # p ["store", dest.name, result_reg, dtype]
-                    if result_reg != dest.name
-                        store dest.name, result_reg, dtype
-                    end
-                    @last_assigned = dest.name
-                    [ dest.name, dtype ]
-                    # unless dest.initialized
-                    #     store dest.name, result_reg, dtype
-                    #     raise "variable was not initialized by store call" unless dest.initialized
-                    #     p [dest.name, "OWO"]
-                    #     [ dest.name, dtype ]
-                    # else
-                    #     puts "Hey, already initialized"
-                    #     @last_assigned = dest.name
-                    #     # [ dest.name, dtype ]
-                    #     [ dest.name, dtype ]
-                    # end
+                    @emitter.load expression.raw, expression.dtype
                 end
-            end
-        
-        # single value initialization 
-        when Array
-            raw, type = node.value
-            case type
-            when :data
-                # TODO: merge with above?
-                assign_type = type_for_data raw
-                if !dest.initialized
-                    dest.dtype = dtype || assign_type
-                end
-                p ["UWU", assign_type, dest, dtype, raw]
-                raise "No dtype for #{dest}" if dest.dtype.nil?
-                raise "Incompatible type: store #{assign_type} into #{dest.dtype}" if dest.dtype != assign_type
-                reg = store dest.name, raw, dest.dtype
-                [ reg, dest.dtype ]
             else
-                raise "unhandled noun type #{type}"
+                raise "TODO: compile expression #{expression.dtype}"
             end
-        
+        when 1
+            # monad
+            raise "TODO: monad"
+        when 2
+            # dyad
+            child_regs = expression.children.map { |noun| compile_expression noun }
+            # TODO: more operators
+            @emitter.primitive "add", expression.dtype, child_regs
         else
-            raise "unknown head type #{node.value}"
+            raise "Unexpected number of children in expression #{expression.children.size}"
+        end
+    end
+    
+    def assign_int_expression_to(group)
+        variable = group.variable
+        expression = group.expression
+        unless @allocated[variable]
+            @emitter.alloca variable, expression.dtype
+            @allocated[variable] = true
+        end
+        register = compile_expression group.expression
+        @emitter.store variable, register, expression.dtype
+    end
+
+    def compile_group(group)
+        case group
+        when StellerJ::Grouper::VariableAssignment
+            case group.expression.dtype
+            when StellerJ::LLVMEmitter::IType
+                assign_int_expression_to group
+            when StellerJ::LLVMEmitter::JITensor
+                raise "TODO: assign to JITensor"
+            else
+                raise "Unhandled assignment of type #{group.dtype}"
+            end
+
+        when StellerJ::Grouper::VerbAssignment
+            raise "TODO: Verb assignment"
+
+        when StellerJ::Grouper::EchoStatement
+            case group.expression.dtype
+            when StellerJ::LLVMEmitter::IType
+                reg = compile_expression group.expression
+                @emitter.call "putn", [ reg ]
+            when StellerJ::LLVMEmitter::JITensor
+                reg = compile_expression group.expression
+                @emitter.call "JITensor_dump", [ reg ]
+            else
+                raise "Unhandled dump of type #{group.dtype}"
+            end
+
+        else
+            raise "Unhandled group type: #{group}"
         end
     end
 
-    def copy(src, dest)
-        @last_assigned = dest.name
-        @emitter.comment "TODO: copy #{src.name} to #{dest.name}"
-        @emitter.call "JITensor_copy_value", [ "%#{src.name}", "%#{dest.name}" ]
-    end
-    
-    def compile_node(node)
-        puts "Compiling: "
-        p node.value
-        raw, type = node.value
-        case type
-        when :copula
-            # assume assignment
-            # TODO: distinction between local and global assignment
-            lhs = node.left
-            name = lhs.value[0]
-            
-            # first time compilation
-            if @variables[name].nil?
-                variable = Variable.new name, nil
-                @variables[name] = variable
-                
-                @emitter.alloca variable.name, :backfill
-                # TODO: initialization code for tensors
-            else
-                variable = @variables[name]
-            end
-
-            # get value
-            rhs = node.right
-            if rhs.speech == :noun
-                if rhs.can_find? { |value| Array === value && value[1] == :word && value[0] == name }
-                    tmp = variable.to_named_temp
-                    if @variables[tmp.name].nil?
-                        @variables[tmp.name] = tmp
-                        @emitter.alloca tmp.name, tmp.dtype
-                    end
-                    compile_value rhs, tmp
-                    copy tmp, variable
-                else
-                    compile_value rhs, variable
-                    @emitter.notify_type variable.name, variable.dtype
-                end
-            else
-                #TODO:
-                raise "TODO: non-noun copula assignment"
-            end
-        else
-            raise "TODO: handle non-copula at top level"
-        end
-        
-        puts
-    end
-    
     def compile
-        @trees.each { |tree|
-            compile_node tree
+        @groups.each { |group|
+            compile_group group
         }
-        # implicitly print last value
-        to_print = @variables[@last_assigned]
-        p @last_assigned, to_print
-        case to_print.dtype
-        when StellerJ::LLVMEmitter::IType
-            reg = @emitter.load to_print.name, to_print.dtype
-            @emitter.call "putn", [ reg ]
-        # when StellerJ::LLVMEmitter::FType
-        #     reg = @emitter.load to_print.name, to_print.dtype
-        #     @emitter.call "putd", [ reg ]
-        when StellerJ::LLVMEmitter::JITensor
-            @emitter.call "JITensor_dump", [ "%#{to_print.name}" ]
-        # when StellerJ::LLVMEmitter::JFTensor
-        #     @emitter.call "JFTensor_dump", [ "%#{to_print.name}" ]
-        else
-            raise "Cannot print datatype #{to_print.dtype}"
-        end
         @emitter.compile
     end
-    
+
     # TODO: more than one function
     
     def self.compile(parsed)

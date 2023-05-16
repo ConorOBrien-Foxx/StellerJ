@@ -19,6 +19,7 @@ class StellerJ::LLVMEmitter
     
     def get_size(type)
         # all pointers are of size 8
+        raise "no type given" if type.nil?
         return 8 if type[-1] == "*"
         result = TypeSize[type]
         raise "could not get type size of #{type}" if result.nil?
@@ -77,6 +78,16 @@ class StellerJ::LLVMEmitter
     end
     
     attr_accessor :focus
+
+    def new_function(name, ret_type, names, signature)
+        @function_data[name] = {
+            return: ret_type,
+            args: signature,
+            arg_names: names,
+        }
+        @functions[name] = []
+        @registers[name] = names.size
+    end
     
     def next_register!(where=@focus)
         value = "%#{@registers[where]}"
@@ -103,6 +114,12 @@ class StellerJ::LLVMEmitter
                 add_line where, "#{name} = alloca #{type}, align #{size}"
             end
         end
+    end
+
+    def basic_constant(value, type, where=@focus)
+        reg = next_register!
+        add_line where, "#{reg} = add #{type} 0, #{value}"
+        reg
     end
     
     def clear_tensor(name, type, where=@focus)
@@ -275,13 +292,18 @@ class StellerJ::LLVMEmitter
     
     def call(name, args, where=@focus)
         data = get_function_data name
-        raise "cannot handle non-void yet" if data[:return] != Void
         rtype = data[:return]
         argtypes = data[:args]
         params = argtypes.zip(args).map { |type, param| "#{type} #{param}" } .join ", "
-        add_line where, "call #{rtype} @#{name}(#{params})"
-        nil
-        # TODO: handle non-void and return a register
+        if data[:return] == Void
+            add_line where, "call #{rtype} @#{name}(#{params})"
+            nil
+        else
+            reg = next_register!
+            p params
+            add_line where, "#{reg} = call #{rtype} @#{name}(#{params})"
+            reg
+        end
     end
     
     def compile
@@ -289,6 +311,18 @@ class StellerJ::LLVMEmitter
             *File.read("int.ll").lines.map(&:chomp),
             *File.read("float.ll").lines.map(&:chomp),
             *File.read("header.ll").lines.map(&:chomp),
+        ]
+        other_fns = @functions.keys - ["main"]
+        other_fns.each { |fn|
+            data = @function_data[fn]
+            params = data[:args]
+            argnames = data[:arg_names]
+            params = params.zip(argnames).map { |l, r| "#{l} %#{r}" }.join ", "
+            lines << "define dso_local #{data[:return]} @#{fn}(#{params}) {"
+            lines += @functions[fn].map { |line| "    #{line}" }
+            lines << "}"
+        }
+        lines += [
             "define dso_local i32 @main() #0 {",
             *@functions["main"].map { |line| "    #{line}" },
             "    ret i32 0",

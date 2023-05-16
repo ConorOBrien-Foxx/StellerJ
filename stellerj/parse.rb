@@ -37,6 +37,10 @@ class StellerJ::Parser
             @right = right
         end
         
+        def dup
+            TreeNode.new(value, speech, left, right)
+        end
+
         attr_accessor :value, :speech, :left, :right
         
         def leaf?
@@ -136,7 +140,7 @@ class StellerJ::Parser
             speech = case type
             when :data
                 :noun
-            when :verb, :adverb, :conjunction, :paren_start, :paren_end, :copula
+            when :verb, :adverb, :conjunction, :paren_start, :paren_end, :copula, :comment
                 type
             when :word
                 # inferring on RHS -> undefined
@@ -144,6 +148,7 @@ class StellerJ::Parser
                 @semantic_context[raw]
             else
                 STDERR.puts "Warn: Unhandled #{token}"
+                :unknown
             end
             TreeNode.new(token, speech)
         }
