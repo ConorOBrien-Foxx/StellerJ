@@ -58,10 +58,9 @@ result =: lhs + rhs
 "
 
 code = "
-NB. add =: +
-y =: 9
-x =: y + 4
-echo x
+y =: 10 12 13 0 4 0 9
+y =: y * y + y
+echo y
 NB. z =: 3 4
 NB. z =: z + z
 "

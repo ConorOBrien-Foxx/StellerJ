@@ -87,6 +87,36 @@ void JITensor_add_vec_vec(struct JITensor* lhs, struct JITensor* rhs, struct JIT
     }
 }
 
+void JITensor_sub_vec_vec(struct JITensor* lhs, struct JITensor* rhs, struct JITensor* out) {
+    // todo: learn how to error
+    if(!JITensor_same_dim(lhs, rhs)) return;
+    JITensor_copy_shape(lhs, out);
+    // naive
+    for(size_t idx = 0; idx < lhs->total; idx++) {
+        out->data[idx] = lhs->data[idx] - rhs->data[idx];
+    }
+}
+
+void JITensor_mul_vec_vec(struct JITensor* lhs, struct JITensor* rhs, struct JITensor* out) {
+    // todo: learn how to error
+    if(!JITensor_same_dim(lhs, rhs)) return;
+    JITensor_copy_shape(lhs, out);
+    // naive
+    for(size_t idx = 0; idx < lhs->total; idx++) {
+        out->data[idx] = lhs->data[idx] * rhs->data[idx];
+    }
+}
+
+void JITensor_div_vec_vec(struct JITensor* lhs, struct JITensor* rhs, struct JITensor* out) {
+    // todo: learn how to error
+    if(!JITensor_same_dim(lhs, rhs)) return;
+    JITensor_copy_shape(lhs, out);
+    // naive
+    for(size_t idx = 0; idx < lhs->total; idx++) {
+        out->data[idx] = lhs->data[idx] / rhs->data[idx];
+    }
+}
+
 int main() {
     struct JITensor numbers;
     numbers.total = 12;

@@ -53,6 +53,18 @@ class StellerJ::LLVMEmitter
             return: Void,
             args: ["#{JITensor}*", "#{JITensor}*", "#{JITensor}*"],
         }
+        @function_data["JITensor_sub_vec_vec"] = {
+            return: Void,
+            args: ["#{JITensor}*", "#{JITensor}*", "#{JITensor}*"],
+        }
+        @function_data["JITensor_mul_vec_vec"] = {
+            return: Void,
+            args: ["#{JITensor}*", "#{JITensor}*", "#{JITensor}*"],
+        }
+        @function_data["JITensor_div_vec_vec"] = {
+            return: Void,
+            args: ["#{JITensor}*", "#{JITensor}*", "#{JITensor}*"],
+        }
         @function_data["JITensor_copy_shape"] = {
             return: Void,
             args: ["#{JITensor}*", "#{JITensor}*"],
