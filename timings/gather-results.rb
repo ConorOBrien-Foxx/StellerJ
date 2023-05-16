@@ -111,8 +111,13 @@ def run_task(name, short_name, params)
     compile_safe "g++ #{name}-simd.cpp -o #{cpp_simd_path} #{c_key_pairs} -O3 #{cpp_flags} -march=native"
     
     # StellerJ
-    STDERR.puts "TODO: StellerJ timings"
+    steller_j_path = "#{short_name}-stellerj"
+    compile_safe "ruby ./../stellerj/stellerj.rb #{name}.steller #{steller_j_path}"
     
+    # StellerJ
+    STDERR.puts "StellerJ:"
+    system "#{call_exe(steller_j_path)} > results/#{short_name}-stellerj.csv"
+
     # J
     STDERR.puts "J:"
     system "#{call_j(j_path)} > results/#{short_name}-j.csv"
@@ -132,6 +137,7 @@ def run_task(name, short_name, params)
     # put together
     STDERR.puts "Saving compiled results..."
     csv = [
+        "results/#{short_name}-stellerj.csv",
         "results/#{short_name}-j.csv",
         # "results/#{short_name}-cpp-o1.csv",
         "results/#{short_name}-cpp-o3.csv",

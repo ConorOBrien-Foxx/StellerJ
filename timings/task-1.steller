@@ -1,0 +1,6 @@
+arr =: i. 320000000
+time +/ arr
+time +/ arr
+time +/ arr
+time +/ arr
+time +/ arr
