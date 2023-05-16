@@ -332,7 +332,7 @@ class StellerJ::LLVMEmitter
     def compile
         lines = [
             *File.read("int.ll").lines.map(&:chomp),
-            *File.read("float.ll").lines.map(&:chomp),
+            # *File.read("float.ll").lines.map(&:chomp),
             *File.read("header.ll").lines.map(&:chomp),
         ]
         other_fns = @functions.keys - ["main"]

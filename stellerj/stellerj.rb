@@ -41,36 +41,8 @@ module StellerJ
 end
 
 
-code = "
-x =: 10 10  $  1 2 3
-"
-
-code = "
-x =: 10.4
-y =: 12.9
-z =: (x * x) + y
-".strip
-
-code = "
-lhs =: 5
-rhs =: 9
-result =: lhs + rhs
-"
-
-code = "
-y =: 10 12 13 0 4 0 9
-NB. y =: y * y + y
-z =: +/ y
-echo z
-NB. echo z
-"
-
-code = "
-x =: 3 3 $ 1 2 3  4 5 6  7 8 9
-y =: 3 3 $ 9 0 9  0 1 0  1 2 3
-echo x +/ . * y
-"
-
+code = File.read(ARGV[0])
+output = ARGV[1] || "temp.out"
 tokens = StellerJ.tokenize(code)
 parsed = StellerJ::parse(tokens)
 grouped = StellerJ::group(parsed)
@@ -82,9 +54,9 @@ File.write "temp.ll", compiled
 
 unless Gem.win_platform?
     puts "Compiling..."
-    system "llc temp.ll && gcc -no-pie temp.s -o temp.out"
+    system "opt temp.ll -o temp.ll -S -O2 && llc temp.ll && gcc -no-pie temp.s -o temp.out"
     if $?.exitstatus == 0
-        puts "Running..."
-        system "./temp.out"
+        # puts "Running..."
+        # system "./temp.out"
     end
 end

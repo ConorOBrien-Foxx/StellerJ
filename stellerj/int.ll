@@ -925,3 +925,5 @@ define dso_local void @JITensor_div_vec_vec(%JITensor* noundef %0, %JITensor* no
 44:
   ret void
 }
+
+attributes #0 = { noinline nounwind optnone uwtable "frame-pointer"="all" "min-legal-vector-width"="0" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" }
