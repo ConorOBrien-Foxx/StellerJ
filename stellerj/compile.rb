@@ -29,8 +29,39 @@ class StellerJ::Compiler
     end
 
     def new_function(verb)
-        p verb
-        exit
+        p ['new function', verb]
+        case verb.raw
+        when "/"
+            subname = {
+                "+" => "add",
+                "-" => "sub",
+                "*" => "mul",
+                "%" => "div",
+            }[verb.children[0].raw]
+            raise 'nested too deeply' if subname.nil?
+            name = "autogen_fold_#{subname}"
+            child_name = name_for_verb(verb.children[0])
+
+            @emitter.new_function name,
+                StellerJ::LLVMEmitter::IType,
+                [ "arr" ],
+                [ "#{StellerJ::LLVMEmitter::JITensor}*" ]
+            old_focus = @emitter.focus
+            @emitter.focus = name
+            # load parameters
+            loaded = @emitter.next_register!
+            @emitter.alloca loaded, "#{StellerJ::LLVMEmitter::JITensor}*"
+            @emitter.store loaded, "%arr", "#{StellerJ::LLVMEmitter::JITensor}*"
+            next_reg = @emitter.load loaded, "#{StellerJ::LLVMEmitter::JITensor}*"
+            result_reg = @emitter.call "JITensor_fold", [ next_reg, "@#{child_name}", "0" ]
+            #%4 = call i64 @JITensor_fold(%struct.JITensor* noundef %3, i64 (i64, i64)* noundef @I64_add, i64 noundef 0)
+            @emitter.add_line @emitter.focus, "ret #{StellerJ::LLVMEmitter::IType} #{result_reg}"
+            @emitter.focus = old_focus
+            name
+        else
+            raise "TODO: compile #{verb}"
+        end
+        # TODO: optimization
     end
 
     def name_for_verb(verb)
@@ -100,10 +131,18 @@ class StellerJ::Compiler
                 raise "Unhandled dyad type: #{expression.dtype}"
             end
         else
-            name = name_for_verb verb.children[0]
+            names = verb.children.map { |child| "@#{name_for_verb child}" }
             child_regs = expression.children.map { |noun| compile_expression noun }
-            p name, child_regs
-            reg = @emitter.call "JITensor_fold", child_regs + [ "@#{name}", "0" ]
+            case expression.raw.raw
+            when "/"
+                reg = @emitter.call "JITensor_fold", child_regs + names + [ "0" ]
+            when "."
+                out_reg = @emitter.next_register!
+                @emitter.alloca out_reg, expression.dtype
+                @emitter.clear_tensor out_reg, expression.dtype
+                @emitter.call "JITensor_inner_product", child_regs + names + [ out_reg ]
+                out_reg
+            end
             # %35 = call i64 @JITensor_fold(%struct.JITensor* noundef %2, i64 (i64, i64)* noundef @I64_add, i64 noundef 0)
             # exit
             # raise 'todo: adverb/verb' 

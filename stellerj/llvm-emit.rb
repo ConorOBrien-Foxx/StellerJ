@@ -7,6 +7,7 @@ class StellerJ::LLVMEmitter
     Void = "void"
     IDyad = "i64 (i64, i64)*"
     IMonad = "i64 (i64)*"
+    ITensorMonad = "i64 (%JITensor*)*"
     JITensor = "%JITensor"
     # JFTensor = "%JFTensor"
     TypeSize = {
@@ -71,6 +72,10 @@ class StellerJ::LLVMEmitter
             return: IType,
             args: ["#{JITensor}*", IDyad, IType ],
         }
+        @function_data["JITensor_inner_product"] = {
+            return: Void,
+            args: ["#{JITensor}*", "#{JITensor}*", ITensorMonad, IDyad, "#{JITensor}*" ],
+        }
         @function_data["JITensor_copy_shape"] = {
             return: Void,
             args: ["#{JITensor}*", "#{JITensor}*"],
@@ -104,7 +109,7 @@ class StellerJ::LLVMEmitter
             arg_names: names,
         }
         @functions[name] = []
-        @registers[name] = names.size
+        @registers[name] = names.size# + 1
     end
     
     def next_register!(where=@focus)

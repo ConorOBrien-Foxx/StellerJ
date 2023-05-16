@@ -62,6 +62,240 @@ define dso_local i64 @I64_div(i64 noundef %0, i64 noundef %1) #0 {
   ret i64 %7
 }
 
+; performs inner product with two input tensors, (tensor -> i64), (i64,i64 -> i64), and output tensor
+define dso_local void @JITensor_inner_product(%JITensor* noundef %0, %JITensor* noundef %1, i64 (%JITensor*)* noundef %2, i64 (i64, i64)* noundef %3, %JITensor* noundef %4) #0 {
+  %6 = alloca %JITensor*, align 8
+  %7 = alloca %JITensor*, align 8
+  %8 = alloca i64 (%JITensor*)*, align 8
+  %9 = alloca i64 (i64, i64)*, align 8
+  %10 = alloca %JITensor*, align 8
+  %11 = alloca i64, align 8
+  %12 = alloca i64, align 8
+  %13 = alloca i64, align 8
+  %14 = alloca %JITensor, align 8
+  %15 = alloca i64, align 8
+  %16 = alloca i64, align 8
+  %17 = alloca i64, align 8
+  store %JITensor* %0, %JITensor** %6, align 8
+  store %JITensor* %1, %JITensor** %7, align 8
+  store i64 (%JITensor*)* %2, i64 (%JITensor*)** %8, align 8
+  store i64 (i64, i64)* %3, i64 (i64, i64)** %9, align 8
+  store %JITensor* %4, %JITensor** %10, align 8
+  %18 = load %JITensor*, %JITensor** %6, align 8
+  %19 = getelementptr inbounds %JITensor, %JITensor* %18, i32 0, i32 2
+  %20 = load i64, i64* %19, align 8
+  %21 = icmp ne i64 %20, 2
+  br i1 %21, label %27, label %22
+
+22:
+  %23 = load %JITensor*, %JITensor** %7, align 8
+  %24 = getelementptr inbounds %JITensor, %JITensor* %23, i32 0, i32 2
+  %25 = load i64, i64* %24, align 8
+  %26 = icmp ne i64 %25, 2
+  br i1 %26, label %27, label %28
+
+27:
+  br label %170
+
+28:
+  %29 = load %JITensor*, %JITensor** %6, align 8
+  %30 = getelementptr inbounds %JITensor, %JITensor* %29, i32 0, i32 1
+  %31 = load i64*, i64** %30, align 8
+  %32 = getelementptr inbounds i64, i64* %31, i64 0
+  %33 = load i64, i64* %32, align 8
+  store i64 %33, i64* %11, align 8
+  %34 = load %JITensor*, %JITensor** %6, align 8
+  %35 = getelementptr inbounds %JITensor, %JITensor* %34, i32 0, i32 1
+  %36 = load i64*, i64** %35, align 8
+  %37 = getelementptr inbounds i64, i64* %36, i64 1
+  %38 = load i64, i64* %37, align 8
+  store i64 %38, i64* %12, align 8
+  %39 = load i64, i64* %12, align 8
+  %40 = load %JITensor*, %JITensor** %7, align 8
+  %41 = getelementptr inbounds %JITensor, %JITensor* %40, i32 0, i32 1
+  %42 = load i64*, i64** %41, align 8
+  %43 = getelementptr inbounds i64, i64* %42, i64 0
+  %44 = load i64, i64* %43, align 8
+  %45 = icmp ne i64 %39, %44
+  br i1 %45, label %46, label %47
+
+46:
+  br label %170
+
+47:
+  %48 = load %JITensor*, %JITensor** %7, align 8
+  %49 = getelementptr inbounds %JITensor, %JITensor* %48, i32 0, i32 1
+  %50 = load i64*, i64** %49, align 8
+  %51 = getelementptr inbounds i64, i64* %50, i64 1
+  %52 = load i64, i64* %51, align 8
+  store i64 %52, i64* %13, align 8
+  %53 = load %JITensor*, %JITensor** %10, align 8
+  %54 = getelementptr inbounds %JITensor, %JITensor* %53, i32 0, i32 0
+  %55 = load i64*, i64** %54, align 8
+  %56 = icmp ne i64* %55, null
+  br i1 %56, label %91, label %57
+
+57:
+  %58 = load %JITensor*, %JITensor** %10, align 8
+  %59 = getelementptr inbounds %JITensor, %JITensor* %58, i32 0, i32 2
+  store i64 2, i64* %59, align 8
+  %60 = load %JITensor*, %JITensor** %10, align 8
+  %61 = getelementptr inbounds %JITensor, %JITensor* %60, i32 0, i32 2
+  %62 = load i64, i64* %61, align 8
+  %63 = mul i64 8, %62
+  %64 = call noalias i8* @malloc(i64 noundef %63) #5
+  %65 = bitcast i8* %64 to i64*
+  %66 = load %JITensor*, %JITensor** %10, align 8
+  %67 = getelementptr inbounds %JITensor, %JITensor* %66, i32 0, i32 1
+  store i64* %65, i64** %67, align 8
+  %68 = load i64, i64* %11, align 8
+  %69 = load %JITensor*, %JITensor** %10, align 8
+  %70 = getelementptr inbounds %JITensor, %JITensor* %69, i32 0, i32 1
+  %71 = load i64*, i64** %70, align 8
+  %72 = getelementptr inbounds i64, i64* %71, i64 0
+  store i64 %68, i64* %72, align 8
+  %73 = load i64, i64* %13, align 8
+  %74 = load %JITensor*, %JITensor** %10, align 8
+  %75 = getelementptr inbounds %JITensor, %JITensor* %74, i32 0, i32 1
+  %76 = load i64*, i64** %75, align 8
+  %77 = getelementptr inbounds i64, i64* %76, i64 1
+  store i64 %73, i64* %77, align 8
+  %78 = load i64, i64* %11, align 8
+  %79 = load i64, i64* %13, align 8
+  %80 = mul i64 %78, %79
+  %81 = load %JITensor*, %JITensor** %10, align 8
+  %82 = getelementptr inbounds %JITensor, %JITensor* %81, i32 0, i32 3
+  store i64 %80, i64* %82, align 8
+  %83 = load %JITensor*, %JITensor** %10, align 8
+  %84 = getelementptr inbounds %JITensor, %JITensor* %83, i32 0, i32 3
+  %85 = load i64, i64* %84, align 8
+  %86 = mul i64 8, %85
+  %87 = call noalias i8* @malloc(i64 noundef %86) #5
+  %88 = bitcast i8* %87 to i64*
+  %89 = load %JITensor*, %JITensor** %10, align 8
+  %90 = getelementptr inbounds %JITensor, %JITensor* %89, i32 0, i32 0
+  store i64* %88, i64** %90, align 8
+  br label %91
+
+91:
+  %92 = getelementptr inbounds %JITensor, %JITensor* %14, i32 0, i32 2
+  store i64 1, i64* %92, align 8
+  %93 = getelementptr inbounds %JITensor, %JITensor* %14, i32 0, i32 2
+  %94 = load i64, i64* %93, align 8
+  %95 = mul i64 8, %94
+  %96 = call noalias i8* @malloc(i64 noundef %95) #5
+  %97 = bitcast i8* %96 to i64*
+  %98 = getelementptr inbounds %JITensor, %JITensor* %14, i32 0, i32 1
+  store i64* %97, i64** %98, align 8
+  %99 = load i64, i64* %12, align 8
+  %100 = getelementptr inbounds %JITensor, %JITensor* %14, i32 0, i32 3
+  store i64 %99, i64* %100, align 8
+  %101 = getelementptr inbounds %JITensor, %JITensor* %14, i32 0, i32 3
+  %102 = load i64, i64* %101, align 8
+  %103 = mul i64 8, %102
+  %104 = call noalias i8* @malloc(i64 noundef %103) #5
+  %105 = bitcast i8* %104 to i64*
+  %106 = getelementptr inbounds %JITensor, %JITensor* %14, i32 0, i32 0
+  store i64* %105, i64** %106, align 8
+  store i64 0, i64* %15, align 8
+  br label %107
+
+107:
+  %108 = load i64, i64* %15, align 8
+  %109 = load i64, i64* %11, align 8
+  %110 = icmp ult i64 %108, %109
+  br i1 %110, label %111, label %170
+
+111:
+  store i64 0, i64* %16, align 8
+  br label %112
+
+112:
+  %113 = load i64, i64* %16, align 8
+  %114 = load i64, i64* %13, align 8
+  %115 = icmp ult i64 %113, %114
+  br i1 %115, label %116, label %166
+
+116:
+  store i64 0, i64* %17, align 8
+  br label %117
+
+117:
+  %118 = load i64, i64* %17, align 8
+  %119 = load i64, i64* %12, align 8
+  %120 = icmp ult i64 %118, %119
+  br i1 %120, label %121, label %151
+
+121:
+  %122 = load i64 (i64, i64)*, i64 (i64, i64)** %9, align 8
+  %123 = load %JITensor*, %JITensor** %6, align 8
+  %124 = getelementptr inbounds %JITensor, %JITensor* %123, i32 0, i32 0
+  %125 = load i64*, i64** %124, align 8
+  %126 = load i64, i64* %15, align 8
+  %127 = load i64, i64* %11, align 8
+  %128 = mul i64 %126, %127
+  %129 = load i64, i64* %17, align 8
+  %130 = add i64 %128, %129
+  %131 = getelementptr inbounds i64, i64* %125, i64 %130
+  %132 = load i64, i64* %131, align 8
+  %133 = load %JITensor*, %JITensor** %7, align 8
+  %134 = getelementptr inbounds %JITensor, %JITensor* %133, i32 0, i32 0
+  %135 = load i64*, i64** %134, align 8
+  %136 = load i64, i64* %17, align 8
+  %137 = load i64, i64* %13, align 8
+  %138 = mul i64 %136, %137
+  %139 = load i64, i64* %16, align 8
+  %140 = add i64 %138, %139
+  %141 = getelementptr inbounds i64, i64* %135, i64 %140
+  %142 = load i64, i64* %141, align 8
+  %143 = call i64 %122(i64 noundef %132, i64 noundef %142)
+  %144 = getelementptr inbounds %JITensor, %JITensor* %14, i32 0, i32 0
+  %145 = load i64*, i64** %144, align 8
+  %146 = load i64, i64* %17, align 8
+  %147 = getelementptr inbounds i64, i64* %145, i64 %146
+  store i64 %143, i64* %147, align 8
+  br label %148
+
+148:
+  %149 = load i64, i64* %17, align 8
+  %150 = add i64 %149, 1
+  store i64 %150, i64* %17, align 8
+  br label %117
+
+151:
+  %152 = load i64 (%JITensor*)*, i64 (%JITensor*)** %8, align 8
+  %153 = call i64 %152(%JITensor* noundef %14)
+  %154 = load %JITensor*, %JITensor** %10, align 8
+  %155 = getelementptr inbounds %JITensor, %JITensor* %154, i32 0, i32 0
+  %156 = load i64*, i64** %155, align 8
+  %157 = load i64, i64* %15, align 8
+  %158 = load i64, i64* %11, align 8
+  %159 = mul i64 %157, %158
+  %160 = load i64, i64* %16, align 8
+  %161 = add i64 %159, %160
+  %162 = getelementptr inbounds i64, i64* %156, i64 %161
+  store i64 %153, i64* %162, align 8
+  br label %163
+
+163:
+  %164 = load i64, i64* %16, align 8
+  %165 = add i64 %164, 1
+  store i64 %165, i64* %16, align 8
+  br label %112
+
+166:
+  br label %167
+
+167:
+  %168 = load i64, i64* %15, align 8
+  %169 = add i64 %168, 1
+  store i64 %169, i64* %15, align 8
+  br label %107
+
+170:
+  ret void
+}
+
 ; fold a function with a given pointer
 define dso_local i64 @JITensor_fold(%JITensor* noundef %0, i64 (i64, i64)* noundef %1, i64 noundef %2) #0 {
   %4 = alloca i64, align 8

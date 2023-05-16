@@ -17,6 +17,7 @@ struct JITensor {
 
 typedef int64_t (*Dyad)(int64_t lhs, int64_t rhs);
 typedef int64_t (*Monad)(int64_t arg);
+typedef int64_t (*TensorMonad)(struct JITensor* arg);
 
 int64_t I64_add(int64_t lhs, int64_t rhs) {
     return lhs + rhs;
@@ -45,6 +46,47 @@ int64_t JITensor_fold(struct JITensor* ptr, Dyad fn, int64_t seed) {
         basis = fn(basis, ptr->data[idx]);
     }
     return basis;
+}
+
+int64_t JITensor_sum(struct JITensor* ptr) {
+    return JITensor_fold(ptr, &I64_add, 0);
+}
+
+void JITensor_inner_product(
+    struct JITensor* a, struct JITensor* b,
+    TensorMonad f, Dyad g,
+    struct JITensor* out) {
+    // assume just matrices for now
+    if(a->dimcount != 2 || b->dimcount != 2) return;
+    // printf("n=%d k=%d\n", a->dims[0], a->dims[1]);
+    // printf("k=%d m=%d\n", b->dims[0], b->dims[1]);
+    size_t n = a->dims[0];
+    size_t k = a->dims[1];
+    // cannot do product
+    if(k != b->dims[0]) return;
+    size_t m = b->dims[1];
+    // initialize out
+    if(!out->data) {
+        out->dimcount = 2;
+        out->dims = malloc(sizeof(*out->dims) * out->dimcount);
+        out->dims[0] = n;
+        out->dims[1] = m;
+        out->total = n * m;
+        out->data = malloc(sizeof(*out->data) * out->total);
+    }
+    struct JITensor slice;
+    slice.dimcount = 1;
+    slice.dims = malloc(sizeof(*slice.dims) * slice.dimcount);
+    slice.total = k;
+    slice.data = malloc(sizeof(*slice.data) * slice.total);
+    for(size_t i = 0; i < n; i++) {
+        for(size_t j = 0; j < m; j++) {
+            for(size_t x = 0; x < k; x++) {
+                slice.data[x] = g(a->data[i * n + x], b->data[x * m + j]);
+            }
+            out->data[i * n + j] = f(&slice);
+        }
+    }
 }
 
 void JITensor_dump(struct JITensor* ptr) {
@@ -130,38 +172,33 @@ void JITensor_div_vec_vec(struct JITensor* lhs, struct JITensor* rhs, struct JIT
 }
 
 int main() {
-    struct JITensor numbers;
-    numbers.total = 12;
-    numbers.dimcount = 1;
-    numbers.dims = malloc(sizeof(*numbers.dims) * numbers.dimcount);
-    numbers.data = malloc(sizeof(*numbers.data) * numbers.total);
-    for(size_t i = 0; i < numbers.total; i++) {
-        numbers.data[i] = 30 ^ i;
+    struct JITensor a;
+    a.total = 12;
+    a.dimcount = 2;
+    a.dims = malloc(sizeof(*a.dims) * a.dimcount);
+    a.data = malloc(sizeof(*a.data) * a.total);
+    for(size_t i = 0; i < a.total; i++) {
+        a.data[i] = i + 1;
     }
-    JITensor_dump(&numbers);
-    int64_t sum = JITensor_fold(&numbers, &I64_add, 0);
-    printf("\nsum = %lld\n", sum);
-    /*
-    struct JITensor a = { malloc(sizeof(uint64_t)*9), malloc(sizeof(uint64_t) * 2), 2 };
-    for(int i = 0; i < 9; i++) a.data[i] = i + 1;
-    a.dims[0] = 3; a.dims[1] = 3; a.dimcount = 2;
-    a.total = a.dims[0] * a.dims[1];
-    JITensor_dump(&a);
-    puts("- plus -");
+    a.dims[0] = 3;
+    a.dims[1] = 4;
+    a.total = 12;
+    a.dimcount = 2;
     
-    struct JITensor b = { malloc(sizeof(uint64_t)*9), malloc(sizeof(uint64_t) * 2), 2 };
-    for(int i = 0; i < 9; i++) b.data[i] = i ^ 43 + 3;
-    b.dims[0] = 3; b.dims[1] = 3; b.dimcount = 2;
-    b.total = b.dims[0] * b.dims[1];
-    JITensor_dump(&b);
-    puts("- is -");
-    
-    struct JITensor out = { 0, 0, 0, 0 };
-    struct JITensor tmp = { 0, 0, 0, 0 };
+    struct JITensor b;
+    b.total = 12;
+    b.dimcount = 2;
+    b.dims = malloc(sizeof(*b.dims) * b.dimcount);
+    b.data = malloc(sizeof(*b.data) * b.total);
+    for(size_t i = 0; i < b.total; i++) {
+        b.data[i] = i + 1;
+    }
+    b.dims[0] = 4;
+    b.dims[1] = 3;
 
-    JITensor_add_vec_vec(&a, &b, &out);
-    JITensor_copy_value(&out, &tmp);
-    
-    JITensor_dump(&tmp);
-    */
+    struct JITensor out = { 0, 0, 0, 0 };
+    JITensor_inner_product(&a, &b, JITensor_sum, I64_mul, &out);
+    JITensor_dump(&a);
+    JITensor_dump(&b);
+    JITensor_dump(&out);
 }
